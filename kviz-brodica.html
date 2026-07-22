@@ -1325,8 +1325,16 @@ function isCorrect(raw,q){
   if(q.num){const v=firstNum(raw); if(!isNaN(v)&&Math.abs(v-q.num.value)<=q.num.tol) return true;}
   const u=norm(raw); if(!u) return false;
   const uTok=u.split(' ').filter(Boolean);
-  // token se poklapa: identičan, ili korisnikov token počinje traženim (dozvola za padežni nastavak do 2 slova)
-  const tokMatch=(ut,at)=> ut===at || (at.length>=3 && ut.startsWith(at) && ut.length-at.length<=2);
+  // duljina zajedničkog početka (korijena) dviju riječi
+  const cpl=(a,b)=>{let i=0,m=Math.min(a.length,b.length);while(i<m&&a[i]===b[i])i++;return i;};
+  // token se poklapa: identičan, ILI dijele korijen (≥3 slova) a razlikuju se samo u nastavku (do 2 slova sa svake strane).
+  // Time 'desnu'≈'desno', 'jugozapada'≈'jugozapad' prolaze, a 'sjeveroistok'≠'sjever' se odbija.
+  const tokMatch=(ut,at)=>{
+    if(ut===at) return true;
+    if(at.length<3) return false;
+    const cp=cpl(ut,at);
+    return cp>=3 && (ut.length-cp)<=2 && (at.length-cp)<=2;
+  };
   // tražena fraza (niz tokena) mora se pojaviti kao uzastopni niz u korisnikovom odgovoru
   const seqMatch=(aTok)=>{
     for(let i=0;i+aTok.length<=uTok.length;i++){
