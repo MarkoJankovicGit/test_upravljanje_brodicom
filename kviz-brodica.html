@@ -1324,9 +1324,24 @@ function firstNum(s){const m=(s||'').toString().replace(',','.').match(/-?\d+(?:
 function isCorrect(raw,q){
   if(q.num){const v=firstNum(raw); if(!isNaN(v)&&Math.abs(v-q.num.value)<=q.num.tol) return true;}
   const u=norm(raw); if(!u) return false;
-  return (q.accept||[]).some(a=>{const an=norm(a);
-    if(an.length<=2) return u.split(' ').includes(an);
-    return u.includes(an)||an.includes(u);});
+  const uTok=u.split(' ').filter(Boolean);
+  // token se poklapa: identičan, ili korisnikov token počinje traženim (dozvola za padežni nastavak do 2 slova)
+  const tokMatch=(ut,at)=> ut===at || (at.length>=3 && ut.startsWith(at) && ut.length-at.length<=2);
+  // tražena fraza (niz tokena) mora se pojaviti kao uzastopni niz u korisnikovom odgovoru
+  const seqMatch=(aTok)=>{
+    for(let i=0;i+aTok.length<=uTok.length;i++){
+      let ok=true;
+      for(let j=0;j<aTok.length;j++){ if(!tokMatch(uTok[i+j],aTok[j])){ok=false;break;} }
+      if(ok) return true;
+    }
+    return false;
+  };
+  return (q.accept||[]).some(a=>{
+    const an=norm(a); if(!an) return false;
+    if(an.length<=2) return u===an;               // kratke šifre (ne, se, sw, n, w…) = potpuno poklapanje
+    const aTok=an.split(' ').filter(Boolean);
+    return aTok.length>0 && seqMatch(aTok);
+  });
 }
 function twoIslands(nm){
   const perNm=40,x0=50,y=90,ax=x0,bx=x0+nm*perNm;
