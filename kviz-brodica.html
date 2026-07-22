@@ -53,6 +53,12 @@
   .qtext{font-size:1.12rem;font-weight:600;margin:6px 0 14px}
   .qvisual{display:flex;justify-content:center;margin:2px 0 16px}
   .qvisual svg{max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px}
+  #qInput input{width:100%;padding:13px 14px;font:inherit;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+  #qInput input:focus{outline:none;border-color:var(--brand)}
+  .feedback .ans{margin-top:6px}
+  .selfrow{display:flex;gap:8px;margin-top:12px}
+  .selfrow button{flex:1}
+  .notebox{padding:12px;border-radius:10px;background:var(--hintbg);border:1px solid #d0a94a;color:var(--hint);font-size:.95rem;margin-top:4px}
   .choices{display:flex;flex-direction:column;gap:9px}
   .choice{text-align:left;width:100%;padding:13px 14px;line-height:1.35}
   .choice:hover{border-color:var(--brand)}
@@ -140,6 +146,7 @@
       <div class="qtext" id="qText">…</div>
       <div class="qvisual" id="qVisual"></div>
       <div class="choices" id="qChoices"></div>
+      <div id="qInput" class="hidden"><input type="text" id="answerInput" placeholder="Upiši odgovor…" autocomplete="off"></div>
 
       <div id="hintWrap"></div>
       <div id="feedbackWrap"></div>
@@ -148,6 +155,8 @@
         <button class="btn-ghost" id="hintBtn">💡 Hint</button>
         <div class="row">
           <button class="btn-ghost" id="quitBtn">Prekini</button>
+          <button class="btn-ghost hidden" id="revealBtn">Prikaži odgovor</button>
+          <button class="btn-primary hidden" id="checkBtn">Provjeri</button>
           <button class="btn-primary hidden" id="nextBtn">Sljedeće →</button>
         </div>
       </div>
@@ -214,7 +223,8 @@ const TOPICS = {
   spel:    "Spelovanje (ITU tablica)",
   uzlovi:  "Konopi i uzlovi",
   motori:  "Motori (motoristika)",
-  sigurnost:"Sigurnost i postupci"
+  sigurnost:"Sigurnost i postupci",
+  pula:"⭐ Najverovatnija pitanja (Pula)"
 };
 const LEVELS = { osn:"Osnovna", napr:"Napredna", trik:"Triki 😈", viz:"Vizuelna 🖼️" };
 
@@ -1305,6 +1315,156 @@ function buildVisuals(){
 QUESTIONS.push(...buildVisuals());
 
 /* ============================================================
+   SEKCIJA: ⭐ NAJVEROVATNIJA PITANJA (PULA) — upisni odgovori
+   ============================================================ */
+function norm(s){return (s||'').toString().toLowerCase()
+  .replace(/[čć]/g,'c').replace(/š/g,'s').replace(/ž/g,'z').replace(/đ/g,'dj')
+  .replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();}
+function firstNum(s){const m=(s||'').toString().replace(',','.').match(/-?\d+(?:\.\d+)?/);return m?parseFloat(m[0]):NaN;}
+function isCorrect(raw,q){
+  if(q.num){const v=firstNum(raw); if(!isNaN(v)&&Math.abs(v-q.num.value)<=q.num.tol) return true;}
+  const u=norm(raw); if(!u) return false;
+  return (q.accept||[]).some(a=>{const an=norm(a);
+    if(an.length<=2) return u.split(' ').includes(an);
+    return u.includes(an)||an.includes(u);});
+}
+function twoIslands(nm){
+  const perNm=40,x0=50,y=90,ax=x0,bx=x0+nm*perNm;
+  let g=`<rect x="10" y="20" width="${bx+70}" height="150" fill="#dcecf7" stroke="#345"/>`;
+  g+=`<text x="18" y="38" font-size="11" fill="#c33" font-weight="bold">N ↑</text>`;
+  g+=`<ellipse cx="${ax}" cy="${y}" rx="26" ry="18" fill="#e8d9a0" stroke="#a88"/><text x="${ax}" y="${y+4}" font-size="12" text-anchor="middle">otok A</text>`;
+  g+=`<ellipse cx="${bx}" cy="${y}" rx="26" ry="18" fill="#e8d9a0" stroke="#a88"/><text x="${bx}" y="${y+4}" font-size="12" text-anchor="middle">otok B</text>`;
+  g+=`<line x1="${ax+26}" y1="${y}" x2="${bx-26}" y2="${y}" stroke="#c33" stroke-width="2" stroke-dasharray="5 4"/>`;
+  const sy=150,sx=x0;
+  g+=`<line x1="${sx}" y1="${sy}" x2="${sx+5*perNm}" y2="${sy}" stroke="#234" stroke-width="2"/>`;
+  for(let k=0;k<=5;k++){g+=`<line x1="${sx+k*perNm}" y1="${sy-5}" x2="${sx+k*perNm}" y2="${sy+5}" stroke="#234" stroke-width="2"/>`;
+    g+=`<text x="${sx+k*perNm}" y="${sy+18}" font-size="10" text-anchor="middle" fill="#234">${k}</text>`;}
+  g+=`<text x="${sx+5*perNm+8}" y="${sy+18}" font-size="10" fill="#234">NM</text>`;
+  return svgWrap(g,bx+80,180);
+}
+function chartDepth(circled, others){
+  const x0=40,y0=30,w=250,h=190;
+  let g=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#e8f0fa" stroke="#345"/>`;
+  g+=`<text x="${x0+6}" y="${y0+16}" font-size="11" fill="#c33" font-weight="bold">N ↑</text>`;
+  const pts=[[90,70],[160,60],[210,95],[70,120],[130,130],[195,150],[110,175],[240,130]];
+  [circled,...others].forEach((v,i)=>{const p=pts[i];g+=`<text x="${p[0]}" y="${p[1]}" font-size="13" fill="#234" text-anchor="middle">${v}</text>`;});
+  g+=`<circle cx="${pts[0][0]}" cy="${pts[0][1]-4}" r="15" fill="none" stroke="#e03131" stroke-width="2.5"/>`;
+  return svgWrap(g,x0+w+20,y0+h+20);
+}
+const PULA = [
+ {id:"pula1",topic:"pula",level:"osn",mode:"type",q:"Dvije brodice plove jedna NASUPROT drugoj (susreću se na istom pravcu). Kako postupaju?",
+  accept:["desno","desna","u desno","udesno"],answer:"Svaka se odlučno i na vrijeme miče UDESNO (za desetak stupnjeva), pa se vraća na svoj kurs.",hint:"Obje u istu stranu.",ref:"str. 38 — mimoilaženje"},
+ {id:"pula2",topic:"pula",level:"osn",mode:"type",q:"Dvije brodice se križaju pod kutem (ukrštanje kurseva). TKO ima prednost?",
+  accept:["desne","desna","s desna","desno","s desne strane"],answer:"Ona koja dolazi s DESNE strane. Druga je zaobilazi po krmi, a ova zadržava kurs i brzinu.",hint:"Pravilo desne strane.",ref:"str. 38 — ukrštanje"},
+ {id:"pula3",topic:"pula",level:"osn",mode:"type",q:"Što u opisu (karakteristici) svjetla znači kratica 'Bl'?",
+  accept:["bljesak","bljeskanje","bljeskovi"],answer:"Bljesak (npr. K Bl = kratki bljesak).",hint:"Način svjetljenja.",ref:"str. 55 — oznake svjetala (IALA)"},
+ {id:"pula4",topic:"pula",level:"osn",mode:"open",q:"Nabroji glavne KARAKTERISTIKE svjetionika koje čitamo s karte.",
+  answer:"Boja svjetla, karakter/ritam (bljesak Bl, izofazno Izo, prekidno Pk…), period (broj sekundi) i broj bljeskova (grupa).",hint:"Boja, ritam, period, broj bljeskova.",ref:"str. 37 i 55 — karakteristike svjetla"},
+ {id:"pula5",topic:"pula",level:"osn",mode:"type",q:"Koliko bljeskova u grupi ima ISTOČNA kardinalna oznaka (svjetlo)?",
+  accept:["3","tri"],answer:"3 (tri) bljeska. Istok = 3, jug = 6 (+ dugi), zapad = 9.",hint:"Sat pokazuje 3.",ref:"str. 55 — IALA svjetla"},
+ {id:"pula6",topic:"pula",level:"osn",mode:"type",q:"Iz kojeg smjera (strane svijeta) puše BURA?",
+  accept:["sjeveroistok","sjever istok","sjeveroistoka","ne"],answer:"Sa sjeveroistoka (NE).",hint:"Prelijeva se preko planina.",ref:"str. 16 — Bura"},
+ {id:"pula7",topic:"pula",level:"osn",mode:"type",q:"Iz kojeg smjera puše JUGO?",
+  accept:["jugoistok","jugo istok","jugoistoka","se"],answer:"S jugoistoka (SE).",hint:"Puše uzduž cijelog Jadrana.",ref:"str. 17 — Jugo"},
+ {id:"pula8",topic:"pula",level:"osn",mode:"type",q:"Iz kojeg smjera puše MAESTRAL?",
+  accept:["sjeverozapad","sjever zapad","nw"],answer:"Sa sjeverozapada (NW).",hint:"Vjetar lijepog vremena.",ref:"str. 18 — Maestral"},
+ {id:"pula9",topic:"pula",level:"osn",mode:"type",q:"Iz kojeg smjera puše TRAMONTANA?",
+  accept:["sjever","n"],answer:"Sa sjevera (N).",hint:"Zovu ga i sjevernjak.",ref:"str. 13 — Tramontana"},
+ {id:"pula10",topic:"pula",level:"osn",mode:"type",q:"Iz kojeg smjera puše LEBIĆ (garbin)?",
+  accept:["jugozapad","jugo zapad","sw"],answer:"S jugozapada (SW).",hint:"Olujni vjetar nevera.",ref:"str. 17 — Lebić"},
+ {id:"pula11",topic:"pula",level:"osn",mode:"type",q:"Strelica pokazuje ODAKLE vjetar dolazi. Upiši naziv vjetra.",visual:windRose(45),
+  accept:["bura"],answer:"Bura (puše s NE).",hint:"Sjeveroistok.",ref:"str. 16 — Bura"},
+ {id:"pula12",topic:"pula",level:"osn",mode:"type",q:"Strelica pokazuje odakle vjetar dolazi. Upiši naziv vjetra.",visual:windRose(135),
+  accept:["jugo","jugo siroko","siroko"],answer:"Jugo (puše s SE).",hint:"Jugoistok.",ref:"str. 17 — Jugo"},
+ {id:"pula13",topic:"pula",level:"osn",mode:"type",q:"Kako su na pomorskoj karti prikazane DUBINE mora?",
+  accept:["crnim brojevima","brojevima","crni brojevi","mali crni brojevi"],answer:"Malim crnim brojevima; linije jednakih dubina zovu se izobate.",hint:"Sitni brojevi po moru.",ref:"str. 35 — dubine"},
+ {id:"pula14",topic:"pula",level:"osn",mode:"type",q:"Kolika je dubina na mjestu označenom crvenim krugom? (upiši broj)",visual:chartDepth(12,[18,7,24,15,31,9,22]),
+  num:{value:12,tol:0},answer:"12 (metara).",hint:"Pročitaj broj unutar kruga.",ref:"str. 35 — dubine na karti"},
+ {id:"pula15",topic:"pula",level:"osn",mode:"type",q:"Na kojem rubu karte mjerimo UDALJENOST (milje)?",
+  accept:["bocnom","bocni","bocno","lijevom","desnom","strani","sirin"],answer:"Na bočnom (lijevom/desnom) rubu — to je geografska širina, jer 1 minuta širine = 1 nautička milja.",hint:"NE na gornjem/donjem rubu.",ref:"str. 32 — mjerenje udaljenosti"},
+ {id:"pula16",topic:"pula",level:"osn",mode:"type",q:"Čemu je jednaka jedna minuta geografske ŠIRINE?",
+  accept:["milja","milji","nauticka milja","1852","jednoj nautickoj milji"],answer:"Jednoj nautičkoj milji (1 NM = 1852 m).",hint:"1' širine = …",ref:"str. 32 — 1' = 1 NM"},
+ {id:"pula17",topic:"pula",level:"osn",mode:"type",q:"Koje svjetlo nosi brodica DO 7 m (na motorni pogon, koja ne glisira)?",
+  accept:["bijelo","bijelo kruzno","kruzno","jedno bijelo"],answer:"Jedno bijelo kružno svjetlo (vidljivo sa svih strana).",hint:"Samo jedno, bijelo.",ref:"str. 53 — brodica do 7 m"},
+ {id:"pula18",topic:"pula",level:"osn",mode:"open",q:"Koja svjetla nosi brod duljine 12–50 m?",
+  answer:"Bijelo jarbolno svjetlo, bočna (desno zeleno, lijevo crveno) i krmeno bijelo.",hint:"Jarbolno + bočna + krmeno.",ref:"str. 53 — brod 12–50 m"},
+ {id:"pula19",topic:"pula",level:"osn",mode:"type",q:"Po čemu se u svjetlima razlikuje brod DULJI od 50 m?",
+  accept:["dva","dva bijela","dvije","dva jarbolna","dva bijela jarbolna"],answer:"Nosi DVA bijela jarbolna svjetla (jedno iznad/iza drugog). Napomena: skripta ne razlikuje posebnu kategoriju od 100 m za svjetla (100 m je granica za gong u magli).",hint:"Broj bijelih jarbolnih svjetala.",ref:"str. 53 — brod dulji od 50 m"},
+ {id:"pula20",topic:"pula",level:"osn",mode:"type",q:"Usidreni brod nosi bijelo KRUŽNO svjetlo. Koliko stupnjeva ono pokriva? (upiši broj)",
+  num:{value:360,tol:0},accept:["360"],answer:"360° — kružno svjetlo, vidljivo sa svih strana.",hint:"Kružno = cijeli krug.",ref:"str. 53 — usidreni brod, bijelo kružno svjetlo"},
+ {id:"pula21",topic:"pula",level:"osn",mode:"type",q:"Koliko ima kardinalnih oznaka i koje su?",
+  accept:["cetiri","4","sjever istok jug zapad","n e s w","sjeverna istocna juzna zapadna"],answer:"Četiri: sjeverna, istočna, južna i zapadna (N, E, S, W).",hint:"Prema stranama svijeta.",ref:"str. 55 — kardinalne oznake"},
+ {id:"pula22",topic:"pula",level:"osn",mode:"type",q:"Koje su BOJE kardinalne oznake?",
+  accept:["zuto crne","zuta crna","zuto i crno","zute crne","crno zuta"],answer:"Žuto-crne (kombinacija žute i crne, ovisno o strani).",hint:"Dvije boje.",ref:"str. 55 — kardinalne oznake"},
+ {id:"pula23",topic:"pula",level:"osn",mode:"type",q:"Koja je ovo kardinalna oznaka? (upiši: sjeverna / istočna / južna / zapadna)",visual:cardinalMark("N"),
+  accept:["sjeverna","sjever","n"],answer:"Sjeverna (oba stošca gore, crno gore / žuto dolje).",hint:"Stošci gledaju gore.",ref:"str. 55 — kardinalne oznake"},
+ {id:"pula24",topic:"pula",level:"osn",mode:"type",q:"Koja je ovo kardinalna oznaka?",visual:cardinalMark("S"),
+  accept:["juzna","jug","s"],answer:"Južna (oba stošca dolje, žuto gore / crno dolje).",hint:"Stošci gledaju dolje.",ref:"str. 55 — kardinalne oznake"},
+ {id:"pula25",topic:"pula",level:"osn",mode:"type",q:"Koja je ovo kardinalna oznaka?",visual:cardinalMark("W"),
+  accept:["zapadna","zapad","w"],answer:"Zapadna (stošci skupljeni vrhovima; žuto-crno-žuto).",hint:"Vrhovi se gledaju (W = wine glass).",ref:"str. 55 — kardinalne oznake"},
+ {id:"pula26",topic:"pula",level:"osn",mode:"type",q:"Kako izgleda oznaka USAMLJENE opasnosti?",
+  accept:["crna","crvenim pojasom","crveni pojas","dvije crne kugle","crne kugle"],answer:"Crna s jednim ili više crvenih vodoravnih pojaseva; vrhovni znak su dvije crne kugle.",hint:"Crno-crvena, dvije kugle gore.",ref:"str. 55 — usamljena opasnost"},
+ {id:"pula27",topic:"pula",level:"osn",mode:"type",q:"Gdje se postavlja oznaka usamljene opasnosti?",
+  accept:["iznad","na opasnosti","na samoj opasnosti","na opasnost"],answer:"Iznad (na) same usamljene opasnosti.",hint:"Točno na opasnom mjestu.",ref:"str. 55 — usamljena opasnost"},
+ {id:"pula28",topic:"pula",level:"osn",mode:"type",q:"Kako se u ITU tablici izgovara slovo J?",
+  accept:["djulijet","dulijet","djuliet"],answer:"ĐULIJET.",hint:"Iz 'Juliet'.",ref:"str. 45 — tablica sricanja"},
+ {id:"pula29",topic:"pula",level:"osn",mode:"type",q:"Kako se izgovara slovo Q?",
+  accept:["kvibek"],answer:"KVIBEK.",hint:"Iz 'Quebec'.",ref:"str. 45 — tablica sricanja"},
+ {id:"pula30",topic:"pula",level:"osn",mode:"type",q:"Kako se izgovara slovo W?",
+  accept:["viski"],answer:"VISKI.",hint:"Iz 'Whiskey'.",ref:"str. 45 — tablica sricanja"},
+ {id:"pula31",topic:"pula",level:"osn",mode:"type",q:"Kako se izgovara broj 9?",
+  accept:["najn"],answer:"NAJN.",hint:"Iz 'nine'.",ref:"str. 45 — brojevi"},
+ {id:"pula32",topic:"pula",level:"osn",mode:"open",q:"Spelaj (ITU) svoje IME i PREZIME naglas.",
+  answer:"Provjeri svako slovo: A Alfa, B Bravo, C Carli, D Delta, E Eko, F Fokstrot, G Golf, H Hotel, I India, J Đulijet, K Kilo, L Lima, M Majk, N November, O Oskar, P Papa, Q Kvibek, R Romeo, S Siera, T Tango, U Juniform, V Viktor, W Viski, X Eksrej, Y Jenki, Z Zulu.",hint:"Slovo po slovo iz tablice.",ref:"str. 45 — tablica sricanja"},
+ {id:"pula33",topic:"pula",level:"osn",mode:"type",q:"KADA se koristi poziv PAN PAN?",
+  accept:["hitnost","hitno","hitna","ozljeda","bolest","kvar","gorivo","nema zivotne opasnosti","nije zivotna opasnost"],answer:"Kod HITNOSTI kad NEMA neposredne životne opasnosti (npr. ozljeda/bolest, kvar, nestalo goriva).",hint:"Bitno je, ali nije životna opasnost.",ref:"str. 45 — Pan Pan"},
+ {id:"pula34",topic:"pula",level:"osn",mode:"type",q:"Vidiš na moru veliki plutajući balvan (trupac). Koji poziv upućuješ?",
+  accept:["securite","sekurite"],answer:"SÉCURITÉ (sekurite) — poziv sigurnosti (opasnost/upozorenje za plovidbu svima).",hint:"Poziv sigurnosti.",ref:"str. 45–46 — Sécurité"},
+ {id:"pula35",topic:"pula",level:"osn",mode:"type",q:"Strelica pokazuje smjer plovidbe na ruži. Koliki je kurs? (upiši u stupnjevima)",visual:courseRose(90),
+  num:{value:90,tol:5},accept:["90","090","istok","e"],answer:"090° (istok, E).",hint:"E = 90°.",ref:"str. 48 — ruža kompasa"},
+ {id:"pula36",topic:"pula",level:"osn",mode:"type",q:"Koliki je kurs? (u stupnjevima)",visual:courseRose(45),
+  num:{value:45,tol:5},accept:["45","045","sjeveroistok","ne"],answer:"045° (sjeveroistok).",hint:"Između N i E.",ref:"str. 48 — ruža kompasa"},
+ {id:"pula37",topic:"pula",level:"osn",mode:"type",q:"Koliki je kurs? (u stupnjevima)",visual:courseRose(135),
+  num:{value:135,tol:5},accept:["135","jugoistok","se"],answer:"135° (jugoistok).",hint:"Između E i S.",ref:"str. 48 — ruža kompasa"},
+ {id:"pula38",topic:"pula",level:"osn",mode:"type",q:"Koliki je kurs? (u stupnjevima)",visual:courseRose(225),
+  num:{value:225,tol:5},accept:["225","jugozapad","sw"],answer:"225° (jugozapad).",hint:"Između S i W.",ref:"str. 48 — ruža kompasa"},
+ {id:"pula39",topic:"pula",level:"osn",mode:"type",q:"Koliki je kurs? (u stupnjevima)",visual:courseRose(270),
+  num:{value:270,tol:5},accept:["270","zapad","w"],answer:"270° (zapad, W).",hint:"W = 270°.",ref:"str. 48 — ruža kompasa"},
+ {id:"pula40",topic:"pula",level:"osn",mode:"type",q:"Koliki je kurs? (u stupnjevima)",visual:courseRose(315),
+  num:{value:315,tol:5},accept:["315","sjeverozapad","nw"],answer:"315° (sjeverozapad).",hint:"Između W i N.",ref:"str. 48 — ruža kompasa"},
+ {id:"pula41",topic:"pula",level:"osn",mode:"type",q:"Što NE SMIJEŠ raditi iznad oznake podmorskog kabela ili cijevi (plinovod/naftovod)?",
+  accept:["sidriti","sidrenje","sidro","baciti sidro","utapati sidro","spustati sidro"],answer:"Ne smiješ sidriti (utapati sidro) — osim u krajnjoj nuždi (havarija).",hint:"Vezano uz sidro.",ref:"str. 11 i 35 — podmorski kabeli i cijevi"},
+ {id:"pula42",topic:"pula",level:"osn",mode:"type",q:"Sidro ti je zapelo za podmorski kabel i ne možeš ga izvaditi. Koga zoveš?",
+  accept:["lucku kapetaniju","lucke kapetanije","kapetaniju","kapetanija","ispostavu lucke kapetanije"],answer:"Najbližu ispostavu lučke kapetanije (izvade sidro besplatno).",hint:"Ne marinu.",ref:"str. 11 — sidro zapelo za kabel"},
+ {id:"pula43",topic:"pula",level:"osn",mode:"type",q:"Šestarom izmjeri razmak između otoka A i B i usporedi sa skalom. Kolika je udaljenost u miljama? (upiši broj)",visual:twoIslands(4),
+  num:{value:4,tol:0.5},accept:["4 nm","4 milje"],answer:"4 nautičke milje (razmak = 4 podjeljka na skali).",hint:"Prebroji podjeljke skale.",ref:"str. 33–34 — mjerenje šestarom"},
+ {id:"pula44",topic:"pula",level:"osn",mode:"type",q:"Kolika je udaljenost otoka A i B u miljama? (upiši broj)",visual:twoIslands(3),
+  num:{value:3,tol:0.5},accept:["3 nm","3 milje"],answer:"3 nautičke milje.",hint:"Usporedi s NM skalom.",ref:"str. 33–34 — mjerenje šestarom"},
+ {id:"pula45",topic:"pula",level:"osn",mode:"type",q:"Što na karti znači oznaka vrste dna 'K' (k)?",
+  accept:["kamen"],answer:"Kamen (kamenito dno).",hint:"k = …",ref:"str. 36 — vrste dna"},
+ {id:"pula46",topic:"pula",level:"osn",mode:"type",q:"Što znači oznaka vrste dna 'P' (p)?",
+  accept:["pijesak"],answer:"Pijesak.",hint:"p = …",ref:"str. 36 — vrste dna"},
+ {id:"pula47",topic:"pula",level:"osn",mode:"type",q:"Što znači oznaka vrste dna 'T' (t)?",
+  accept:["trava"],answer:"Trava.",hint:"t = …",ref:"str. 36 — vrste dna"},
+ {id:"pula48",topic:"pula",level:"osn",mode:"open",q:"Nabroji nekoliko OZNAKA koje se na karti nalaze na moru.",
+  answer:"Npr.: svjetionik/pomorsko svjetlo, svjetleća plutača, plutača lijeve/desne strane, plutača nad osamljenom opasnosti, sidrište, zabranjeno sidrenje, podmorski kabel i cijev, greben/hrid, podrtina, dubine i izobate, morske struje.",hint:"Svjetla, plutače, sidrišta, opasnosti…",ref:"str. 35–36 — oznake na karti"},
+ // Pitanja koja NISU u skripti — bez izmišljenih odgovora
+ {id:"pula-n1",topic:"pula",level:"osn",mode:"note",q:"Udaljenost od ronioca (oznaka ronioca na vodi).",
+  answer:"Ovo NIJE u priručniku Nautika Kluba. Ne dajem izmišljen odgovor — provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
+ {id:"pula-n2",topic:"pula",level:"osn",mode:"note",q:"Udaljenost / uvjeti za glisiranje.",
+  answer:"Ovo NIJE u priručniku Nautika Kluba. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
+ {id:"pula-n3",topic:"pula",level:"osn",mode:"note",q:"Udaljenost kupača od obale.",
+  answer:"Ovo NIJE u priručniku Nautika Kluba. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
+ {id:"pula-n4",topic:"pula",level:"osn",mode:"note",q:"Smiješ li s kategorijom B voziti JetBoat?",
+  answer:"Nije izričito u priručniku Nautika Kluba. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
+ {id:"pula-n5",topic:"pula",level:"osn",mode:"note",q:"Koji broj se zove pri nesreći na moru (195)?",
+  answer:"Broj 195 (MRCC / traganje i spašavanje) NIJE naveden u priručniku Nautika Kluba. Provjeri kod instruktora. (Ne boduje se.)"},
+ {id:"pula-n6",topic:"pula",level:"osn",mode:"note",q:"Smije li se glisirati između crvenog otoka i punte u Rovinju?",
+  answer:"Lokalno pravilo — NIJE u priručniku Nautika Kluba. Provjeri kod instruktora / u lokalnoj naredbi. (Ne boduje se.)"}
+];
+QUESTIONS.push(...PULA);
+
+/* ============================================================
    MOTOR APLIKACIJE
    ============================================================ */
 const STORE_KEY = "kvizBrodicaV1";
@@ -1448,20 +1608,102 @@ function renderQuestion(){
   document.getElementById('hintWrap').innerHTML='';
   document.getElementById('feedbackWrap').innerHTML='';
   document.getElementById('nextBtn').classList.add('hidden');
-  document.getElementById('hintBtn').classList.remove('hidden');
+  document.getElementById('hintBtn').classList.toggle('hidden', !q.hint);
 
-  // build shuffled choices
-  const opts = shuffle(q.choices.map((text,i)=>({text, correct:i===0})));
-  const box = document.getElementById('qChoices');
-  box.innerHTML='';
-  const letters=['A','B','C','D','E'];
-  opts.forEach((o,i)=>{
-    const b=document.createElement('button');
-    b.className='choice';
-    b.innerHTML=`<span class="mk">${letters[i]}.</span>${o.text}`;
-    b.onclick=()=>answer(b, o.correct, opts);
-    box.appendChild(b);
-  });
+  const mode = q.mode || 'mcq';
+  const choicesEl = document.getElementById('qChoices');
+  const inputEl = document.getElementById('qInput');
+  const checkBtn = document.getElementById('checkBtn');
+  const revealBtn = document.getElementById('revealBtn');
+  choicesEl.innerHTML='';
+
+  if(mode==='mcq'){
+    inputEl.classList.add('hidden'); choicesEl.classList.remove('hidden');
+    checkBtn.classList.add('hidden'); revealBtn.classList.add('hidden');
+    const opts = shuffle(q.choices.map((text,i)=>({text, correct:i===0})));
+    const letters=['A','B','C','D','E'];
+    opts.forEach((o,i)=>{
+      const b=document.createElement('button');
+      b.className='choice';
+      b.innerHTML=`<span class="mk">${letters[i]}.</span>${o.text}`;
+      b.onclick=()=>answer(b, o.correct, opts);
+      choicesEl.appendChild(b);
+    });
+  } else if(mode==='note'){
+    choicesEl.classList.add('hidden'); inputEl.classList.add('hidden');
+    checkBtn.classList.add('hidden'); revealBtn.classList.add('hidden');
+    document.getElementById('hintBtn').classList.add('hidden');
+    const s=qStat(q.id); if(s.seen===0){ s.seen++; s.box=5; persist(); }
+    document.getElementById('feedbackWrap').innerHTML=`<div class="notebox">⚠️ ${escapeHtml(q.answer)}</div>`;
+    document.getElementById('nextBtn').classList.remove('hidden');
+  } else { // 'type' or 'open'
+    choicesEl.classList.add('hidden'); inputEl.classList.remove('hidden');
+    const ai=document.getElementById('answerInput'); ai.value=''; ai.disabled=false;
+    checkBtn.classList.toggle('hidden', mode!=='type');
+    revealBtn.classList.remove('hidden');
+    setTimeout(()=>ai.focus(),40);
+  }
+}
+
+/* zajednička obrada odgovora (za upisna i otvorena pitanja) */
+function recordAnswer(q, ok){
+  const s=qStat(q.id); s.seen++;
+  session.answered++;
+  if(!session.byTopic[q.topic]) session.byTopic[q.topic]={c:0,t:0};
+  session.byTopic[q.topic].t++;
+  if(ok){ s.correct++; s.box=Math.min(s.box+1,5); session.correct++; session.byTopic[q.topic].c++; }
+  else {
+    s.wrong++; s.box=1; session.wrongIds.push(q.id);
+    if(!session.requeued.has(q.id)){
+      session.requeued.add(q.id);
+      const insertAt=Math.min(session.queue.length, session.idx+3+(Math.random()*3|0));
+      session.queue.splice(insertAt,0,q);
+    }
+  }
+  persist();
+  document.getElementById('qScore').textContent = `Točno: ${session.correct}`;
+}
+function typedFeedback(ok, q){
+  document.getElementById('feedbackWrap').innerHTML =
+    `<div class="feedback ${ok===true?'ok':ok===false?'bad':''}">
+       ${ok===true?'✅ <b>Točno!</b>':ok===false?'❌ <b>Netočno.</b>':''}
+       <div class="ans"><b>Odgovor:</b> ${escapeHtml(q.answer)}</div>
+       ${q.ref?`<span class="ref">📖 Gradivo: ${escapeHtml(q.ref)}</span>`:''}
+     </div>`;
+}
+function finishTyped(){
+  document.getElementById('checkBtn').classList.add('hidden');
+  document.getElementById('revealBtn').classList.add('hidden');
+  document.getElementById('hintBtn').classList.add('hidden');
+  document.getElementById('answerInput').disabled=true;
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+function checkTyped(){
+  if(session.answeredThis) return; session.answeredThis=true;
+  const q=session.currentQ;
+  const ok=isCorrect(document.getElementById('answerInput').value, q);
+  recordAnswer(q, ok); typedFeedback(ok, q); finishTyped();
+}
+function revealTyped(){
+  if(session.answeredThis) return;
+  const q=session.currentQ;
+  if((q.mode)==='open'){
+    session.answeredThis=true;
+    typedFeedback(null, q);
+    document.getElementById('answerInput').disabled=true;
+    document.getElementById('checkBtn').classList.add('hidden');
+    document.getElementById('revealBtn').classList.add('hidden');
+    document.getElementById('hintBtn').classList.add('hidden');
+    const div=document.createElement('div'); div.className='selfrow';
+    div.innerHTML=`<button class="btn-primary" id="knewBtn">✅ Znao sam</button><button id="didntBtn">❌ Nisam znao</button>`;
+    document.getElementById('feedbackWrap').appendChild(div);
+    document.getElementById('knewBtn').onclick=()=>{ recordAnswer(q,true); const r=document.querySelector('.selfrow'); if(r)r.remove(); document.getElementById('nextBtn').classList.remove('hidden'); };
+    document.getElementById('didntBtn').onclick=()=>{ recordAnswer(q,false); const r=document.querySelector('.selfrow'); if(r)r.remove(); document.getElementById('nextBtn').classList.remove('hidden'); };
+  } else {
+    session.answeredThis=true;
+    recordAnswer(q, false);
+    typedFeedback(false, q); finishTyped();
+  }
 }
 
 function answer(btn, isCorrect, opts){
@@ -1600,6 +1842,11 @@ document.getElementById('reviewWrongBtn').onclick=()=>{
   startQuiz(shuffle(pool).slice(0, progress.prefs.len==='all'?pool.length:Math.min(progress.prefs.len,pool.length)));
 };
 document.getElementById('hintBtn').onclick=showHint;
+document.getElementById('checkBtn').onclick=checkTyped;
+document.getElementById('revealBtn').onclick=revealTyped;
+document.getElementById('answerInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter' && session && session.currentQ && !session.answeredThis && (session.currentQ.mode==='type')) checkTyped();
+});
 document.getElementById('nextBtn').onclick=nextQuestion;
 document.getElementById('quitBtn').onclick=()=>{ if(confirm("Prekinuti kviz? Napredak po pitanjima je već spremljen.")){ updateHomeProgress(); show('home'); } };
 document.getElementById('statsBtn').onclick=showStats;
