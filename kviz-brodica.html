@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kviz — Voditelj brodice A/B</title>
+<title>Boat Training Rovinj — Kviz za voditelja brodice A/B</title>
 <style>
   :root{
     --bg:#f4f6f8; --card:#ffffff; --ink:#1a2027; --muted:#5b6672;
-    --line:#dfe4ea; --brand:#0a558c; --brand2:#0b7285;
+    --line:#dfe4ea; --brand:#159bd7; --brand2:#0e7cb0;
     --ok:#2f9e44; --okbg:#e7f6ec; --bad:#e03131; --badbg:#fce9e9;
     --hint:#8a6d00; --hintbg:#fff8dd; --shadow:0 1px 3px rgba(0,0,0,.08);
   }
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#12171c; --card:#1b232b; --ink:#e8edf2; --muted:#9aa7b2;
-      --line:#2c3843; --brand:#4dabf7; --brand2:#3bc9db;
+      --line:#2c3843; --brand:#2bb0ea; --brand2:#34c6e4;
       --ok:#51cf66; --okbg:#132a1a; --bad:#ff6b6b; --badbg:#2a1414;
       --hint:#ffe08a; --hintbg:#2a2410; --shadow:0 1px 3px rgba(0,0,0,.4);
     }
@@ -24,7 +24,12 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
     line-height:1.5;-webkit-text-size-adjust:100%}
   .wrap{max-width:760px;margin:0 auto;padding:16px 14px 60px}
-  header h1{font-size:1.35rem;margin:.2rem 0}
+  .brandbar{display:flex;align-items:center;gap:12px;margin-bottom:2px}
+  .brandmark{display:inline-flex;background:#fff;border-radius:14px;padding:5px;box-shadow:var(--shadow)}
+  .wordmark{display:flex;flex-direction:column;line-height:1.08}
+  .wordmark b{font-size:1.12rem;letter-spacing:.5px;color:var(--ink);font-weight:800}
+  .wordmark > span{font-size:.76rem;letter-spacing:4px;color:var(--brand);font-weight:700}
+  header h1{font-size:1.28rem;margin:.55rem 0 .1rem}
   header p{color:var(--muted);margin:.2rem 0 1rem;font-size:.92rem}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
     padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
@@ -88,8 +93,19 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>⚓ Kviz — Voditelj brodice A/B</h1>
-    <p>Sva pitanja su izvučena isključivo iz tvoje skripte (Nautika Klub). Uz svako pitanje piše gdje se gradivo nalazi.</p>
+    <!-- LOGO: po želji zamijenite ovaj SVG službenim logotipom, npr. <img src="logo.png" width="54"> -->
+    <div class="brandbar">
+      <span class="brandmark">
+        <svg viewBox="0 0 72 72" width="54" height="54" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boat Training Rovinj">
+          <path d="M4 50 C26 30 46 20 68 15 C50 27 34 36 22 55 C16 53 10 52 4 50 Z" fill="#159bd7"/>
+          <path d="M24 56 C31 45 33 34 29 24 C43 29 49 40 43 52 C37 58 30 59 24 56 Z" fill="#159bd7"/>
+          <text x="15" y="49" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="44" fill="#0b1622">B</text>
+        </svg>
+      </span>
+      <span class="wordmark"><b>BOAT TRAINING</b><span>ROVINJ</span></span>
+    </div>
+    <h1>⚓ Kviz za voditelja brodice — kategorija A i B</h1>
+    <p>Interaktivna priprema za teorijski ispit · <em>Learn how to drive a boat</em>. Uz svako pitanje piše gdje se gradivo nalazi.</p>
   </header>
 
   <!-- HOME -->
@@ -199,7 +215,7 @@
     </div>
   </section>
 
-  <footer>Izvor svih pitanja: <em>Priručnik za voditelja brodice kategorija A i B — Nautika Klub</em>. Aplikacija ne koristi internet niti vanjske izvore.</footer>
+  <footer>Aplikacija radi lokalno u pregledniku, bez interneta. Pitanja prate službeni program za voditelja brodice kategorije A i B. · Demo pripremljen za <b>Boat Training Rovinj</b> · <a href="https://boat-training-rovinj.eu/" style="color:var(--brand)">boat-training-rovinj.eu</a></footer>
 </div>
 
 <script>
@@ -1473,17 +1489,17 @@ const PULA = [
   answer:"Npr.: svjetionik/pomorsko svjetlo, svjetleća plutača, plutača lijeve/desne strane, plutača nad osamljenom opasnosti, sidrište, zabranjeno sidrenje, podmorski kabel i cijev, greben/hrid, podrtina, dubine i izobate, morske struje.",hint:"Svjetla, plutače, sidrišta, opasnosti…",ref:"str. 35–36 — oznake na karti"},
  // Pitanja koja NISU u skripti — bez izmišljenih odgovora
  {id:"pula-n1",topic:"pula",level:"osn",mode:"note",q:"Udaljenost od ronioca (oznaka ronioca na vodi).",
-  answer:"Ovo NIJE u priručniku Nautika Kluba. Ne dajem izmišljen odgovor — provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
+  answer:"Ovo NIJE u gradivu ovog tečaja. Ne dajem izmišljen odgovor — provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
  {id:"pula-n2",topic:"pula",level:"osn",mode:"note",q:"Udaljenost / uvjeti za glisiranje.",
-  answer:"Ovo NIJE u priručniku Nautika Kluba. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
+  answer:"Ovo NIJE u gradivu ovog tečaja. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
  {id:"pula-n3",topic:"pula",level:"osn",mode:"note",q:"Udaljenost kupača od obale.",
-  answer:"Ovo NIJE u priručniku Nautika Kluba. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
+  answer:"Ovo NIJE u gradivu ovog tečaja. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
  {id:"pula-n4",topic:"pula",level:"osn",mode:"note",q:"Smiješ li s kategorijom B voziti JetBoat?",
-  answer:"Nije izričito u priručniku Nautika Kluba. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
+  answer:"Nije izričito u gradivu ovog tečaja. Provjeri kod instruktora / u pravilniku. (Ne boduje se.)"},
  {id:"pula-n5",topic:"pula",level:"osn",mode:"note",q:"Koji broj se zove pri nesreći na moru (195)?",
-  answer:"Broj 195 (MRCC / traganje i spašavanje) NIJE naveden u priručniku Nautika Kluba. Provjeri kod instruktora. (Ne boduje se.)"},
+  answer:"Broj 195 (MRCC / traganje i spašavanje) NIJE naveden u gradivu ovog tečaja. Provjeri kod instruktora. (Ne boduje se.)"},
  {id:"pula-n6",topic:"pula",level:"osn",mode:"note",q:"Smije li se glisirati između crvenog otoka i punte u Rovinju?",
-  answer:"Lokalno pravilo — NIJE u priručniku Nautika Kluba. Provjeri kod instruktora / u lokalnoj naredbi. (Ne boduje se.)"}
+  answer:"Lokalno pravilo — NIJE u gradivu ovog tečaja. Provjeri kod instruktora / u lokalnoj naredbi. (Ne boduje se.)"}
 ];
 QUESTIONS.push(...PULA);
 
