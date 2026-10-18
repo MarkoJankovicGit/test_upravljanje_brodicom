@@ -3,10 +3,12 @@
 // Akcije (POST, JSON): create, set_password, set_active, delete.
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 
+// Dopuštena porijekla (CORS). Dodatna se postavljaju u tajnama funkcije: ALLOWED_ORIGINS=https://a.vercel.app,https://b.hr
 const ALLOWED_ORIGINS = [
   "https://markojankovicgit.github.io",
   "http://localhost:5178",
   "http://127.0.0.1:5178",
+  ...(Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((o) => o.trim()).filter((o) => /^https?:\/\/[^\s*]+$/.test(o)),
 ];
 
 function corsHeaders(origin: string | null): Record<string, string> {

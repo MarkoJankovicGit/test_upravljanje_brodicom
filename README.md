@@ -1,6 +1,6 @@
 # Kviz — Voditelj brodice A/B (Boat Training Rovinj)
 
-Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B). Sve je u jednom fajlu: **[`kviz-brodica.html`](kviz-brodica.html)** (uz logo `btr-logo.jpg`).
+Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B). Aplikacija je jedan statični fajl: **[`index.html`](index.html)** (uz logo `btr-logo.jpg`). Stari link `kviz-brodica.html` preusmjerava na njega.
 
 ## Mogućnosti
 
@@ -15,11 +15,20 @@ Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B)
 
 ## Arhitektura
 
-- **Frontend:** jedan statični HTML (`kviz-brodica.html`), GitHub Pages. Bez build koraka i bez vanjskih biblioteka; prema Supabaseu ide običan `fetch`.
+- **Frontend:** jedan statični HTML (`index.html`), GitHub Pages ili Vercel. Bez build koraka i bez vanjskih biblioteka; prema Supabaseu ide običan `fetch`.
 - **Baza i prijava:** Supabase (projekt `ouavhtfnhvfzyzzftyks`, eu-north-1). Šema i pravila pristupa su u [`supabase/`](supabase/README.md).
 - **Upravljanje korisnicima:** Edge funkcija `admin-users` (kreiranje, nova lozinka, deaktivacija, brisanje). Samo ona koristi tajni `service_role` ključ, koji nikad nije u pregledniku ni u repou.
 - **U pregledniku** su samo URL projekta i javni (publishable) ključ; zaštitu daju RLS pravila u bazi.
 - Javna registracija je isključena: korisnike dodaje isključivo admin.
+
+## Objava na Vercelu
+
+1. Vercel → **Add New → Project** → odaberi repo `test_upravljanje_brodicom`.
+2. **Framework Preset: Other.** Build Command, Install Command i Output Directory ostavi prazne (`vercel.json` to već postavlja). Nema `package.json` ni build koraka.
+3. Deploy. Početna stranica je `index.html`.
+4. **Obavezno nakon prvog deploya:** adresu projekta (npr. `https://naziv.vercel.app`, i vlastitu domenu ako je bude) dodaj u Supabase → Edge Functions → **Secrets** → `ALLOWED_ORIGINS` (više adresa odvoji zarezom). Bez toga admin ne može kreirati korisnike s te adrese.
+
+`vercel.json` šalje zaglavlja: zabrana indeksiranja, CSP (dopušta samo vlastiti sadržaj, Google Fonts i Supabase projekt), `X-Frame-Options: DENY` i ostala. `.vercelignore` sprječava objavu `supabase/` i `*.md`. Ako se promijeni adresa Supabase projekta, treba izmijeniti `connect-src` u CSP-u.
 
 ## Ograničenja i sljedeći koraci
 
@@ -31,7 +40,8 @@ Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B)
 ## Pokretanje
 
 - Online: GitHub Pages (`main` grana).
-- Lokalno: `python -m http.server 5178` u ovom folderu, pa `http://localhost:5178/kviz-brodica.html` (prijava traži `https` ili `localhost`).
+- Vercel: vidi niže.
+- Lokalno: `python -m http.server 5178` u ovom folderu, pa `http://localhost:5178/` (prijava traži `https` ili `localhost`).
 
 ## Napomena o izvoru
 

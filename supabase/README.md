@@ -22,7 +22,7 @@ Admin namjerno **ne vidi** tuđi napredak.
 
 ## Edge funkcija `admin-users`
 
-`functions/admin-users/index.ts` — postavljena u projekt (Edge Functions → Deploy via Editor). Provjera tokena na ulazu ("Verify JWT with legacy secret") je isključena jer funkcija sama provjerava prijavljenog korisnika i je li aktivni admin. Dopušteno porijeklo: `https://markojankovicgit.github.io` i lokalni `5178`. Akcije: `create`, `set_password`, `set_active`, `delete`; štiti zadnjeg administratora i samog sebe.
+`functions/admin-users/index.ts` — postavljena u projekt (Edge Functions → Deploy via Editor). Provjera tokena na ulazu ("Verify JWT with legacy secret") je isključena jer funkcija sama provjerava prijavljenog korisnika i je li aktivni admin. Dopuštena porijekla (CORS): `https://markojankovicgit.github.io`, lokalni `5178`, te sve adrese iz tajne **`ALLOWED_ORIGINS`** (Edge Functions → Secrets; više adresa odvojiti zarezom, npr. adresa na Vercelu). Izmjena tajne ne traži novi deploy koda. Akcije: `create`, `set_password`, `set_active`, `delete`; štiti zadnjeg administratora i samog sebe.
 
 ## Provjera pravila pristupa
 
