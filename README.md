@@ -1,11 +1,12 @@
 # Kviz — Voditelj brodice A/B (Boat Training Rovinj)
 
-Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B). Sve je u jednom fajlu: **[`kviz-brodica.html`](kviz-brodica.html)**.
+Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B). Sve je u jednom fajlu: **[`kviz-brodica.html`](kviz-brodica.html)** (uz logo `btr-logo.jpg`).
 
 ## Mogućnosti
 
-- **414 pitanja** u 16 lekcija, složenih u 6 grupa (ispitna pitanja, navigacija, oznake/svjetla/signali, pravila i sigurnost, brod i oprema, komunikacija).
-- **Složi svoj kviz** — uvijek vidljiv: lekcije, težina i vrsta (Osnovna, Napredna, Zamke, Slikovna), broj pitanja. Izbor se pamti po korisniku.
+- **Tri jezika: hrvatski, engleski, njemački.** Cijela učenička aplikacija i svih 414 pitanja (tekst, odgovori, pomoć, gradivo, odgovori za upis) dostupni su na sva tri jezika; učenik bira jezik na prijavi i u Profilu. **Admin panel je uvijek na hrvatskom.** Prijevodi pitanja su nacrt za stručni pregled, vidi [PREVODI-ZA-PREGLED.md](PREVODI-ZA-PREGLED.md).
+- **414 pitanja** u 16 lekcija, složenih u 6 grupa (usmeni ispit, navigacija, oznake/svjetla/signali, pravila i sigurnost, brod i oprema, komunikacija).
+- **Složi vlastitu vježbu**: lekcije, težina i vrsta (Osnovna, Napredna, Zamke, Slikovna), broj pitanja. Izbor se pamti po korisniku.
 - **Slikovna i animirana pitanja** (SVG): ruža vjetrova i kursa, karta s koordinatama, kardinalne/lateralne oznake, svjetla broda, scenariji izbjegavanja sudara, karakteristike svjetala.
 - Uz svako pitanje: gdje se gradivo nalazi u skripti + pomoć (hint).
 - **Pametno ponavljanje** (Leitner) — pitanja koja grešiš vraćaju se češće.
