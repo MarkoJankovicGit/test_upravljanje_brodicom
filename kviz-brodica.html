@@ -11,188 +11,252 @@
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#07192c; --navy-2:#0d2944; --sea:#17b6cf; --sea-2:#0e7fa6;
-    --lime:#d7f24a; --lime-ink:#0a1a0f; --sand:#f0e4c6;
-    --bg:#eef3f4; --card:#ffffff; --ink:#0b1f2e; --muted:#5d6f7b; --line:#e3ebed;
+    --navy:#07192c; --navy-2:#0d2c4a; --sea:#17b6cf; --sea-2:#0e7fa6;
+    --lime:#d7f24a; --lime-ink:#0a1a0f;
+    --bg:#f2f6f7; --card:#ffffff; --ink:#0b1f2e; --muted:#5d6f7b; --line:#e1e9ec;
     --ok:#12a05a; --okbg:#e6f6ec; --bad:#e23b4e; --badbg:#fdeaed;
     --hint:#7a5e00; --hintbg:#fff6d4;
     --brand:var(--sea-2); --brand2:var(--sea);
-    --radius:18px; --radius-sm:12px;
-    --shadow:0 2px 10px rgba(10,30,50,.06), 0 1px 3px rgba(10,30,50,.05);
-    --shadow-lg:0 16px 44px rgba(7,25,44,.16);
+    --radius:20px;
+    --shadow:0 1px 2px rgba(10,30,50,.05), 0 4px 14px rgba(10,30,50,.05);
+    --shadow-lg:0 14px 36px rgba(7,25,44,.14);
     --display:'Unbounded',"Arial Black",system-ui,sans-serif;
     --body:'Manrope',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     --ease:cubic-bezier(.22,.61,.36,1);
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#081320; --card:#10212f; --ink:#e8f0f3; --muted:#9fb1bc; --line:#213442;
+      --bg:#08131f; --card:#0f202e; --ink:#e8f0f3; --muted:#9fb1bc; --line:#1f3241;
       --ok:#3ec77e; --okbg:#0f2a1c; --bad:#ff6b78; --badbg:#2c1418;
       --hint:#ffdd80; --hintbg:#2a2410;
-      --shadow:0 2px 12px rgba(0,0,0,.4); --shadow-lg:0 18px 44px rgba(0,0,0,.55);
+      --shadow:0 2px 12px rgba(0,0,0,.35); --shadow-lg:0 18px 40px rgba(0,0,0,.5);
     }
   }
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:var(--body);line-height:1.55;-webkit-text-size-adjust:100%;
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-  .wrap{max-width:780px;margin:0 auto;padding:0 0 70px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.55;
+    -webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding-bottom:40px}
+  .hidden{display:none !important}
+  .muted{color:var(--muted);font-size:.86rem}
+  .center{text-align:center}
 
   /* ---------- HERO ---------- */
   .hero{position:relative;overflow:hidden;color:#eaf4f7;
-    background:radial-gradient(120% 90% at 85% -10%, #12406a 0%, var(--navy-2) 42%, var(--navy) 100%);
-    padding:20px 20px 0;border-radius:0 0 26px 26px;box-shadow:var(--shadow-lg)}
-  .hero-grid{position:absolute;inset:0;opacity:.5;pointer-events:none;
-    background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
-    background-size:26px 26px;-webkit-mask-image:linear-gradient(#000,transparent 70%);mask-image:linear-gradient(#000,transparent 70%)}
-  .hero-inner{position:relative;z-index:2;max-width:620px;margin:0 auto}
-  .brandbar{display:flex;align-items:center;gap:12px;padding-top:4px}
-  .brandmark{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;
-    background:var(--lime);border-radius:15px;box-shadow:0 6px 18px rgba(215,242,74,.3)}
-  .brandmark svg{width:38px;height:38px;display:block}
+    background:radial-gradient(90% 70% at 100% 0%, rgba(23,182,207,.32), transparent 60%),
+               linear-gradient(160deg,var(--navy-2) 0%, var(--navy) 72%);
+    border-radius:0 0 28px 28px;padding:16px 20px 30px;box-shadow:var(--shadow-lg)}
+  .hero-inner{position:relative;z-index:2}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .brandbar{display:flex;align-items:center;gap:11px}
+  .brandmark{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
+    background:var(--lime);border-radius:13px;box-shadow:0 6px 16px rgba(215,242,74,.25)}
+  .brandmark svg{width:32px;height:32px;display:block}
   .wordmark{display:flex;flex-direction:column;line-height:1}
-  .wordmark b{font-family:var(--display);font-size:1.05rem;letter-spacing:.3px;color:#fff;font-weight:800}
-  .wordmark > span{font-size:.72rem;letter-spacing:5px;color:var(--lime);font-weight:700;margin-top:4px}
-  .eyebrow{display:inline-flex;align-items:center;gap:8px;margin:22px 0 10px;
-    font-size:.72rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--lime)}
-  .eyebrow::before{content:"";width:26px;height:2px;background:var(--lime);display:inline-block}
-  .hero h1{font-family:var(--display);font-weight:800;text-transform:uppercase;
-    font-size:clamp(1.8rem,7.5vw,2.9rem);line-height:1.03;margin:0 0 12px;letter-spacing:-.5px}
+  .wordmark b{font-family:var(--display);font-size:.95rem;color:#fff;font-weight:800}
+  .wordmark > span{font-size:.66rem;letter-spacing:5px;color:var(--lime);font-weight:700;margin-top:4px}
+  .icon-btn{width:42px;height:42px;padding:0;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;font-size:1.05rem}
+  .icon-btn:hover{border-color:var(--lime)}
+  .icon-btn.light{background:var(--card);border-color:var(--line);color:var(--ink);font-size:.95rem}
+  .icon-btn.light:hover{border-color:var(--sea)}
+  .hero-body{max-width:600px;padding-top:28px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;
+    font-size:.7rem;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:var(--lime)}
+  .eyebrow::before{content:"";width:22px;height:2px;background:var(--lime)}
+  .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,8.6vw,3.1rem);
+    line-height:1.04;margin:0 0 14px;letter-spacing:-.6px}
   .hero h1 em{font-style:normal;color:var(--lime)}
-  .hero .lede{color:#b9cede;font-size:.96rem;max-width:44ch;margin:0 0 20px}
-  .hero .lede em{color:var(--sea);font-style:italic}
-  .hero-stats{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 22px}
-  .kpi{flex:1;min-width:92px}
-  .kpi b{font-family:var(--display);font-weight:700;font-size:1.7rem;color:#fff;display:block;line-height:1}
-  .kpi span{font-size:.74rem;color:#9fb8c8;letter-spacing:.3px}
-  .hero-wave{display:block;width:100%;height:auto;margin-bottom:-1px;position:relative;z-index:1}
-  .hero.compact{padding:14px 16px 0;border-radius:0 0 20px 20px}
-  .hero.compact .eyebrow,.hero.compact h1,.hero.compact .lede,.hero.compact .hero-stats,.hero.compact .hero-wave,.hero.compact .hero-grid{display:none}
-  .hero.compact .brandbar{padding:2px 0 14px}
+  .lede{color:#b9cede;font-size:1rem;max-width:46ch;margin:0}
+  .cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin:24px 0 22px}
+  .cta-meta{font-size:.84rem;color:#9fb8c8;font-weight:600}
+  @media(max-width:520px){ .cta-row .btn-lg{width:100%} .cta-meta{width:100%;text-align:center} }
+  .hero-stats{display:flex;gap:8px;flex-wrap:wrap}
+  .kpi{display:inline-flex;align-items:baseline;gap:6px;background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px}
+  .kpi b{font-family:var(--display);font-size:.9rem;color:#fff;font-weight:700}
+  .kpi span{font-size:.76rem;color:#a9c2d1}
+  .hero-waves{position:absolute;left:0;bottom:0;width:200%;height:54px;z-index:1;opacity:.28;pointer-events:none;
+    animation:drift 14s linear infinite}
+  .hero-waves.w2{opacity:.16;animation-duration:22s;bottom:8px}
+  .hero.compact{padding:14px 20px;border-radius:0 0 22px 22px}
+  .hero.compact .hero-body,.hero.compact .hero-waves{display:none}
+  .hero.gone{display:none}
 
   /* ---------- LAYOUT ---------- */
   .stack-pad{padding:0 16px}
-  main{margin-top:18px}
+  main{margin-top:20px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:18px;margin-bottom:14px;box-shadow:var(--shadow);
-    animation:rise .5s var(--ease) both}
-  .card-head{display:flex;align-items:center;gap:11px;margin:0 0 14px}
-  .sec-num{flex:none;display:inline-flex;align-items:center;justify-content:center;
-    width:30px;height:30px;border-radius:9px;background:var(--navy);color:var(--lime);
-    font-family:var(--display);font-weight:700;font-size:.9rem}
+    padding:20px;margin-bottom:14px;box-shadow:var(--shadow);animation:rise .45s var(--ease) both}
   h2{font-family:var(--display);font-size:1rem;font-weight:700;margin:0;letter-spacing:-.2px}
-  h2.plain{margin:0 0 .7rem}
-  .center{text-align:center}
-  .hidden{display:none !important}
-  .muted{color:var(--muted);font-size:.86rem}
+  h2.plain{margin:0 0 14px}
+  .sec-title{font-family:var(--display);font-size:.92rem;font-weight:700;margin:26px 2px 12px}
+
+  /* steps (prvi dolazak) */
+  .steps{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+  @media(min-width:640px){.steps{grid-template-columns:repeat(3,1fr)}}
+  .steps li{display:flex;gap:12px;align-items:flex-start}
+  .st-n{flex:none;width:30px;height:30px;border-radius:10px;background:var(--lime);color:var(--lime-ink);
+    font-family:var(--display);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:.82rem}
+  .steps b{display:block;font-size:.95rem}
+  .steps p{margin:2px 0 0;color:var(--muted);font-size:.85rem;line-height:1.45}
+
+  /* napredak (povratnik) */
+  .pc-top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  .label{font-size:.72rem;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+  .pc-pct{font-family:var(--display);font-size:2rem;font-weight:800;line-height:1.1}
+
+  /* brzi načini */
+  .modes{display:grid;gap:10px}
+  @media(min-width:700px){.modes{grid-template-columns:repeat(3,1fr)}}
+  .mode{display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:16px;border-radius:18px;
+    background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);animation:rise .45s var(--ease) both}
+  .mode:hover{border-color:var(--sea);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+  @media(min-width:700px){.mode{flex-direction:column;align-items:flex-start}.mode .m-arr{display:none}}
+  .m-ic{flex:none;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+  .m-lime{background:var(--lime)} .m-sea{background:linear-gradient(135deg,var(--sea),var(--sea-2))} .m-navy{background:var(--navy)}
+  .m-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .m-txt b{font-size:.95rem;font-weight:800}
+  .m-txt small{color:var(--muted);font-size:.82rem;font-weight:500;line-height:1.4}
+  .m-arr{color:var(--muted);font-size:1.15rem;font-weight:700}
+  .mode.is-empty{opacity:.72}
+
+  /* panel prilagodbe */
+  .panel{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  summary{list-style:none;cursor:pointer}
+  summary::-webkit-details-marker{display:none}
+  .panel>summary{display:flex;align-items:center;gap:14px;padding:16px}
+  .p-ic{flex:none;width:44px;height:44px;border-radius:13px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:1.15rem}
+  .p-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .p-txt b{font-size:.95rem}
+  .p-txt small{color:var(--muted);font-size:.82rem;font-weight:600}
+  .chev{flex:none;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+    transform:rotate(45deg);transition:transform .2s var(--ease);margin:0 6px 4px}
+  details[open]>summary .chev{transform:rotate(-135deg);margin-bottom:-4px}
+  .panel-body{padding:2px 16px 18px;border-top:1px solid var(--line)}
+  .field{margin-top:18px}
+  .field-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+    font-size:.72rem;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+  .link-btn{background:none;border:none;padding:4px 8px;color:var(--sea-2);font-weight:700;font-size:.84rem;letter-spacing:0;text-transform:none}
+  .link-btn:hover{text-decoration:underline;border:none}
+  .link-btn.quiet{color:var(--muted)}
+  .row{display:flex;gap:9px;flex-wrap:wrap}
+  .row.tight{gap:2px}
+
+  /* grupe cjelina (collapsible) */
+  .groups{display:flex;flex-direction:column;gap:8px}
+  .grp{border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+  .grp>summary{display:flex;align-items:center;gap:10px;padding:12px 14px;font-weight:700;font-size:.92rem}
+  .g-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--line)}
+  .g-dot.on{background:var(--sea-2)}
+  .g-dot.part{background:linear-gradient(90deg,var(--sea-2) 50%,var(--line) 50%)}
+  .g-name{flex:1}
+  .g-count{font-size:.8rem;color:var(--muted);font-weight:700}
+  .grp-body{padding:0 12px 12px}
+  .tchips{display:flex;flex-wrap:wrap;gap:8px}
+  .tchip{position:relative;cursor:pointer}
+  .tchip input{position:absolute;opacity:0;pointer-events:none}
+  .tchip span{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;
+    border:1.5px solid var(--line);background:var(--card);font-size:.86rem;font-weight:600;transition:.15s}
+  .tchip:hover span{border-color:var(--sea)}
+  .tchip em{font-style:normal;color:var(--muted);font-size:.75rem;font-weight:800}
+  .tchip input:checked+span{background:var(--navy);border-color:var(--navy);color:#fff}
+  .tchip input:checked+span em{color:var(--lime)}
+  .tchip input:focus-visible+span{outline:2px solid var(--sea);outline-offset:2px}
+  .g-toggle{margin-top:8px;padding-left:2px}
+
+  /* tip pitanja / broj pitanja */
+  .len{display:flex;gap:8px;flex-wrap:wrap}
+  .len button{padding:9px 15px;border-radius:999px;font-size:.88rem}
+  .len button.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:13px;padding:4px;gap:4px}
+  .seg button{flex:1;border:none;background:transparent;padding:9px 0;border-radius:10px;font-size:.9rem}
+  .seg button:hover{border:none;background:rgba(23,182,207,.08)}
+  .seg button.sel{background:var(--card);box-shadow:var(--shadow);color:var(--ink)}
+  .type-help{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:.83rem;color:var(--muted)}
+  .type-help b{color:var(--ink)}
+  .home-foot{display:flex;justify-content:center;gap:6px;margin-top:20px}
 
   /* ---------- BUTTONS ---------- */
-  button{font:inherit;cursor:pointer;border-radius:11px;border:1px solid var(--line);
-    background:var(--card);color:var(--ink);padding:12px 15px;font-weight:600;
+  button{font:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);padding:12px 16px;font-weight:700;
     transition:transform .12s var(--ease),border-color .15s,background .15s,box-shadow .15s}
   button:hover{border-color:var(--sea)}
   button:active{transform:translateY(1px) scale(.995)}
-  .btn-primary{background:var(--lime);color:var(--lime-ink);border-color:var(--lime);
-    font-weight:800;box-shadow:0 8px 20px rgba(215,242,74,.28)}
-  .btn-primary:hover{border-color:var(--lime);filter:brightness(1.03);transform:translateY(-1px)}
+  button:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
+  .btn-primary{background:var(--lime);color:var(--lime-ink);border-color:var(--lime);font-weight:800;
+    box-shadow:0 8px 20px rgba(215,242,74,.25)}
+  .btn-primary:hover{border-color:var(--lime);filter:brightness(1.04);transform:translateY(-1px)}
+  .btn-lg{padding:16px 26px;font-size:1.05rem;border-radius:14px}
   .btn-dark{background:var(--navy);color:#fff;border-color:var(--navy)}
   .btn-dark:hover{border-color:var(--navy);background:var(--navy-2)}
   .btn-ghost{background:transparent}
-  .row{display:flex;gap:9px;flex-wrap:wrap}
-  .row.stack{flex-direction:column}
 
-  /* ---------- TOPICS ---------- */
-  .topics{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-  @media(max-width:540px){.topics{grid-template-columns:1fr}}
-  label.topic{position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px;
-    border:1.5px solid var(--line);border-radius:13px;background:var(--card);
-    font-size:.9rem;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;overflow:hidden}
-  label.topic:hover{border-color:var(--sea)}
-  label.topic:has(input:checked){border-color:var(--sea-2);background:linear-gradient(0deg,rgba(23,182,207,.07),rgba(23,182,207,.07))}
-  label.topic .ic{flex:none;font-size:1.15rem;width:24px;text-align:center}
-  label.topic input{appearance:none;-webkit-appearance:none;flex:none;width:20px;height:20px;margin:0;
-    border:2px solid var(--line);border-radius:6px;background:var(--card);cursor:pointer;position:relative;transition:.15s}
-  label.topic input:checked{background:var(--sea-2);border-color:var(--sea-2)}
-  label.topic input:checked::after{content:"✓";position:absolute;inset:0;color:#fff;font-size:13px;font-weight:900;
-    display:flex;align-items:center;justify-content:center}
-  label.topic span.lbl{flex:1;min-width:0}
-  label.topic .cnt{color:var(--muted);font-weight:600;font-size:.8rem}
-
-  /* ---------- PILLS (level / length) ---------- */
-  .len{display:flex;gap:8px;flex-wrap:wrap}
-  .len button{padding:9px 16px;border-radius:999px;font-weight:700;font-size:.9rem}
-  .len button.sel{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:var(--shadow)}
-  .len button.sel.lime{background:var(--lime);color:var(--lime-ink);border-color:var(--lime)}
-
-  /* ---------- PROGRESS BAR ---------- */
-  .bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:8px 0}
-  .bar > i{display:block;height:100%;border-radius:99px;
-    background:linear-gradient(90deg,var(--sea),var(--sea-2));
-    background-size:200% 100%;transition:width .6s var(--ease);animation:flow 2.4s linear infinite}
-  .qmeta{display:flex;justify-content:space-between;align-items:center;font-size:.82rem;color:var(--muted);font-weight:600}
-
-  /* ---------- QUIZ ---------- */
+  /* ---------- KVIZ (focus mode) ---------- */
+  .quiz-top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:12px 0;background:var(--bg)}
+  .qt-mid{flex:1}
+  .qt-mid .bar{margin:0}
+  .qt-count{font-size:.82rem;font-weight:800;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0}
+  .bar > i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--sea),var(--sea-2));transition:width .5s var(--ease)}
+  .q-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .chip{display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#dff0f5;
-    border-radius:99px;padding:5px 13px;font-size:.76rem;font-weight:700;letter-spacing:.3px}
-  .chip::before{content:"⚓";font-size:.8rem}
-  .qtext{font-size:1.2rem;font-weight:700;line-height:1.35;margin:12px 0 14px;letter-spacing:-.2px}
-  .qvisual{display:flex;justify-content:center;margin:2px 0 18px}
+    border-radius:99px;padding:5px 12px;font-size:.75rem;font-weight:700}
+  .score{font-size:.8rem;font-weight:800;color:var(--ok)}
+  .qtext{font-size:1.22rem;font-weight:800;line-height:1.35;margin:14px 0 16px;letter-spacing:-.2px}
+  .qvisual{display:flex;justify-content:center;margin:0 0 18px}
+  .qvisual:empty{display:none}
   .qvisual svg{max-width:100%;height:auto;background:linear-gradient(180deg,#f7fbfd,#eef5f9);
-    border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:var(--shadow)}
-  #qInput input{width:100%;padding:14px 16px;font:inherit;font-weight:600;border:2px solid var(--line);
-    border-radius:13px;background:var(--bg);color:var(--ink);transition:border-color .15s}
+    border:1px solid var(--line);border-radius:16px;padding:8px}
+  #qInput input{width:100%;padding:15px 16px;font:inherit;font-weight:600;border:2px solid var(--line);
+    border-radius:14px;background:var(--bg);color:var(--ink);transition:border-color .15s}
   #qInput input:focus{outline:none;border-color:var(--sea);background:var(--card)}
-
   .choices{display:flex;flex-direction:column;gap:10px}
-  .choice{text-align:left;width:100%;padding:14px 15px;line-height:1.4;font-weight:600;
-    border:1.5px solid var(--line);border-radius:13px;display:flex;align-items:flex-start;gap:11px;
-    animation:rise .34s var(--ease) both}
-  .choice:hover:not([disabled]){border-color:var(--sea);background:rgba(23,182,207,.05);transform:translateX(2px)}
+  .choice{text-align:left;width:100%;padding:14px 15px;line-height:1.4;font-weight:600;border:1.5px solid var(--line);
+    border-radius:14px;display:flex;align-items:flex-start;gap:12px;animation:rise .3s var(--ease) both}
+  .choice:nth-child(2){animation-delay:.04s}.choice:nth-child(3){animation-delay:.08s}.choice:nth-child(4){animation-delay:.12s}
+  .choice:hover:not([disabled]){border-color:var(--sea);background:rgba(23,182,207,.05)}
   .choice.correct{background:var(--okbg);border-color:var(--ok);color:var(--ink)}
   .choice.wrong{background:var(--badbg);border-color:var(--bad);color:var(--ink)}
   .choice[disabled]{cursor:default}
-  .choice[disabled]:not(.correct):not(.wrong){opacity:.55}
-  .choice .mk{flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
-    border-radius:8px;background:var(--bg);border:1px solid var(--line);font-family:var(--display);font-weight:700;
-    font-size:.78rem;margin:0}
+  .choice[disabled]:not(.correct):not(.wrong){opacity:.5}
+  .choice .mk{flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;
+    background:var(--bg);border:1px solid var(--line);font-family:var(--display);font-weight:700;font-size:.74rem;margin:0}
   .choice.correct .mk{background:var(--ok);color:#fff;border-color:var(--ok)}
   .choice.wrong .mk{background:var(--bad);color:#fff;border-color:var(--bad)}
-
-  .feedback{margin-top:14px;padding:14px;border-radius:13px;border:1.5px solid var(--line);font-size:.95rem;
-    animation:rise .3s var(--ease) both}
+  .feedback{margin-top:14px;padding:14px;border-radius:14px;border:1.5px solid var(--line);font-size:.95rem;animation:rise .3s var(--ease) both}
   .feedback.ok{background:var(--okbg);border-color:var(--ok)}
   .feedback.bad{background:var(--badbg);border-color:var(--bad)}
   .feedback .ans{margin-top:6px}
   .feedback .ref{display:block;margin-top:9px;color:var(--muted);font-size:.84rem;font-weight:600}
   .selfrow{display:flex;gap:9px;margin-top:12px}
   .selfrow button{flex:1}
-  .notebox{padding:13px;border-radius:13px;background:var(--hintbg);border:1.5px solid #e2c766;color:var(--hint);font-size:.94rem;margin-top:4px;font-weight:600}
-  .hintbox{margin-top:12px;padding:12px 13px;border-radius:13px;background:var(--hintbg);
-    border:1.5px solid #e6cf6b;color:var(--hint);font-size:.91rem;font-weight:600;animation:rise .3s var(--ease) both}
-  .toolbar{display:flex;gap:9px;justify-content:space-between;margin-top:16px;flex-wrap:wrap}
+  .notebox{padding:13px;border-radius:14px;background:var(--hintbg);border:1.5px solid #e2c766;color:var(--hint);font-size:.94rem;font-weight:600}
+  .hintbox{margin-top:12px;padding:12px 13px;border-radius:14px;background:var(--hintbg);border:1.5px solid #e6cf6b;
+    color:var(--hint);font-size:.91rem;font-weight:600;animation:rise .3s var(--ease) both}
+  .actionbar{position:sticky;bottom:0;z-index:10;display:flex;gap:10px;
+    padding:14px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(0,0,0,0),var(--bg) 35%)}
+  .actionbar button{flex:1;padding:15px 16px}
+  .actionbar #hintBtn{flex:0 0 auto}
 
-  /* ---------- STATS / RESULT ---------- */
+  /* ---------- REZULTAT / STATISTIKA ---------- */
   .stat-grid{display:grid;grid-template-columns:1fr;gap:10px}
-  .stat{border:1px solid var(--line);border-radius:13px;padding:12px 13px;background:var(--bg)}
+  @media(min-width:640px){.stat-grid{grid-template-columns:1fr 1fr}}
+  .stat{border:1px solid var(--line);border-radius:14px;padding:12px 13px;background:var(--bg)}
   .stat .top{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;font-weight:700}
-  .big{font-family:var(--display);font-size:2.2rem;font-weight:800;line-height:1;margin:6px 0}
-  .result-ring{margin:4px auto 2px;display:block}
+  .big{font-family:var(--display);font-size:2.4rem;font-weight:800;line-height:1;margin:8px 0}
+  .res-ic{font-size:2rem;line-height:1}
+  .stack-btns{display:flex;flex-direction:column;gap:10px}
   .pill-ok{color:var(--ok);font-weight:800}
   .pill-bad{color:var(--bad);font-weight:800}
-  footer{color:var(--muted);font-size:.78rem;text-align:center;margin-top:24px;padding:0 16px;line-height:1.7}
+  footer{color:var(--muted);font-size:.78rem;text-align:center;margin-top:28px;padding:0 16px;line-height:1.7}
   footer a{color:var(--sea-2);font-weight:700;text-decoration:none}
-  footer a:hover{text-decoration:underline}
 
-  /* ---------- ANIMATIONS ---------- */
-  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-  @keyframes flow{to{background-position:-200% 0}}
-  @keyframes bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-4px) rotate(1deg)}}
-  .card:nth-child(2){animation-delay:.04s}.card:nth-child(3){animation-delay:.08s}
-  .card:nth-child(4){animation-delay:.12s}.card:nth-child(5){animation-delay:.16s}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes drift{to{transform:translateX(-50%)}}
+  .modes .mode:nth-child(2){animation-delay:.05s}.modes .mode:nth-child(3){animation-delay:.1s}
 </style>
 </head>
 <body>
@@ -200,148 +264,173 @@
 
   <!-- ===================== HERO ===================== -->
   <header class="hero">
-    <div class="hero-grid"></div>
     <div class="hero-inner">
-      <div class="brandbar">
-        <span class="brandmark">
-          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boat Training Rovinj">
-            <g fill="none" stroke="#07192c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="24" cy="9" r="3.4"/>
-              <path d="M24 12.4V40"/>
-              <path d="M15 18h18"/>
-              <path d="M9 27c0 8.3 6.7 14 15 14s15-5.7 15-14"/>
-              <path d="M9 27l-4 2.5M39 27l4 2.5"/>
-            </g>
-          </svg>
-        </span>
-        <span class="wordmark"><b>BOAT TRAINING</b><span>ROVINJ</span></span>
+      <div class="topbar">
+        <div class="brandbar">
+          <span class="brandmark">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boat Training Rovinj">
+              <g fill="none" stroke="#07192c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="24" cy="9" r="3.4"/><path d="M24 12.4V40"/><path d="M15 18h18"/>
+                <path d="M9 27c0 8.3 6.7 14 15 14s15-5.7 15-14"/><path d="M9 27l-4 2.5M39 27l4 2.5"/>
+              </g>
+            </svg>
+          </span>
+          <span class="wordmark"><b>BOAT TRAINING</b><span>ROVINJ</span></span>
+        </div>
+        <button class="icon-btn" id="statsBtn" aria-label="Statistika" title="Statistika">📊</button>
       </div>
 
-      <div class="eyebrow">Priprema za ispit · Kategorija A i B</div>
-      <h1>Nauči ploviti.<br><em>Položi iz prve.</em></h1>
-      <p class="lede">Interaktivni kviz po službenom programu za voditelja brodice. Uz svako pitanje piše gdje se gradivo nalazi — <em>learn how to drive a boat</em>.</p>
-
-      <div class="hero-stats">
-        <div class="kpi"><b id="heroQ">0</b><span>pitanja iz skripte</span></div>
-        <div class="kpi"><b id="heroT">0</b><span>cjelina gradiva</span></div>
-        <div class="kpi"><b>4</b><span>tipa pitanja</span></div>
-      </div>
-    </div>
-    <svg class="hero-wave" viewBox="0 0 780 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M0 30 C120 10 240 10 390 26 C540 42 660 42 780 24 L780 48 L0 48 Z" fill="var(--bg)"/>
-    </svg>
-  </header>
-
-  <main class="stack-pad">
-  <!-- HOME -->
-  <section id="home">
-    <div class="card">
-      <h2 class="plain">Tvoj napredak</h2>
-      <div class="qmeta"><span>Ukupno savladano</span><span id="homeMasteryPct">0%</span></div>
-      <div class="bar"><i id="homeMasteryBar" style="width:0%"></i></div>
-      <div class="muted" id="homeSummary">Još nisi počeo. Odaberi celine i kreni.</div>
-    </div>
-
-    <div class="card">
-      <div class="card-head"><span class="sec-num">1</span><h2>Odaberi cjeline</h2></div>
-      <div class="row" style="margin-bottom:12px">
-        <button class="btn-ghost" id="selAll">Označi sve</button>
-        <button class="btn-ghost" id="selNone">Poništi sve</button>
-      </div>
-      <div class="topics" id="topicList"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-head"><span class="sec-num">2</span><h2>Tip pitanja</h2></div>
-      <div class="len" id="levelPick"></div>
-      <p class="muted" style="margin:.8rem 0 0"><b>Osnovna</b> = gradivo direktno. <b>Napredna</b> = detalji, formule i tablice. <b>Triki 😈</b> = zamke i klopke (ali sve iz skripte). <b>Vizuelna 🖼️</b> = ruža vjetrova, karta, oznake, svjetla i animirani scenariji.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-head"><span class="sec-num">3</span><h2>Dužina kviza</h2></div>
-      <div class="len" id="lenPick"></div>
-      <p class="muted" style="margin:.8rem 0 0">Pitanja se biraju pametno: ono što grešiš vraća se češće, a cjeline se miješaju (nije linearno). Napredak se pamti i kad zatvoriš stranicu.</p>
-    </div>
-
-    <div class="card">
-      <div class="row stack">
-        <button class="btn-primary" id="startBtn">▶️ Započni kviz</button>
-        <button class="btn-dark" id="reviewWrongBtn">🔁 Vježbaj samo pitanja koja grešim</button>
-        <div class="row">
-          <button class="btn-ghost" id="statsBtn" style="flex:1">📊 Statistika</button>
-          <button class="btn-ghost" id="resetBtn" style="flex:1">🗑️ Resetiraj</button>
+      <div class="hero-body">
+        <div class="eyebrow">Voditelj brodice · kategorija A i B</div>
+        <h1>Spremi se za ispit <em>bez stresa.</em></h1>
+        <p class="lede">Kratki kvizovi po službenom programu. Aplikacija pamti što griješiš i vraća ti ta pitanja dok ih ne svladaš.</p>
+        <div class="cta-row">
+          <button class="btn-primary btn-lg" id="startBtn">Započni kviz <span aria-hidden="true">→</span></button>
+          <span class="cta-meta" id="ctaMeta">15 pitanja · sve cjeline</span>
+        </div>
+        <div class="hero-stats">
+          <div class="kpi"><b id="heroQ">0</b><span>pitanja</span></div>
+          <div class="kpi"><b id="heroT">0</b><span>cjelina</span></div>
+          <div class="kpi"><b id="heroV">0</b><span>slikovnih i animiranih</span></div>
         </div>
       </div>
     </div>
+    <svg class="hero-waves" viewBox="0 0 1600 54" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 Q100 12 200 30 T400 30 T600 30 T800 30 T1000 30 T1200 30 T1400 30 T1600 30" fill="none" stroke="#17b6cf" stroke-width="2"/></svg>
+    <svg class="hero-waves w2" viewBox="0 0 1600 54" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 Q100 46 200 30 T400 30 T600 30 T800 30 T1000 30 T1200 30 T1400 30 T1600 30" fill="none" stroke="#d7f24a" stroke-width="1.5"/></svg>
+  </header>
+
+  <main class="stack-pad">
+  <!-- ===================== HOME ===================== -->
+  <section id="home">
+
+    <!-- povratnik: napredak -->
+    <div class="card hidden" id="progressCard">
+      <div class="pc-top">
+        <div><div class="label">Tvoj napredak</div><div class="pc-pct" id="homeMasteryPct">0%</div></div>
+      </div>
+      <div class="bar"><i id="homeMasteryBar"></i></div>
+      <div class="muted" id="homeSummary"></div>
+    </div>
+
+    <!-- prvi dolazak: kako funkcionira -->
+    <div class="card" id="stepsCard">
+      <h2 class="plain">Kako funkcionira</h2>
+      <ol class="steps">
+        <li><span class="st-n">1</span><div><b>Odgovaraj</b><p>Pitanja s ponuđenim odgovorima, upisom, slikom ili animacijom.</p></div></li>
+        <li><span class="st-n">2</span><div><b>Uči iz greške</b><p>Uz svaki odgovor vidiš točan odgovor i stranicu u skripti.</p></div></li>
+        <li><span class="st-n">3</span><div><b>Ponavljaj pametno</b><p>Što griješiš vraća se češće — dok ne svladaš. Napredak se pamti.</p></div></li>
+      </ol>
+    </div>
+
+    <h3 class="sec-title">Brzi načini vježbe</h3>
+    <div class="modes">
+      <button class="mode" id="quickPula">
+        <span class="m-ic m-lime">⭐</span>
+        <span class="m-txt"><b>Najvjerojatnija ispitna pitanja</b><small>Ono što se najčešće pita na ispitu u Puli</small></span>
+        <span class="m-arr">→</span>
+      </button>
+      <button class="mode" id="quickViz">
+        <span class="m-ic m-sea">🧭</span>
+        <span class="m-txt"><b>Slikovna pitanja</b><small>Karta, kompas, oznake, svjetla i animirani scenariji</small></span>
+        <span class="m-arr">→</span>
+      </button>
+      <button class="mode" id="reviewWrongBtn">
+        <span class="m-ic m-navy">🔁</span>
+        <span class="m-txt"><b>Ponovi svoje greške</b><small id="wrongCount">Još nema grešaka — prvo odradi jedan kviz</small></span>
+        <span class="m-arr">→</span>
+      </button>
+    </div>
+
+    <details class="panel" id="customPanel">
+      <summary>
+        <span class="p-ic">⚙️</span>
+        <span class="p-txt"><b>Prilagodi kviz</b><small id="customSummary">sve cjeline · svi tipovi · 15 pitanja</small></span>
+        <span class="chev"></span>
+      </summary>
+      <div class="panel-body">
+        <div class="field">
+          <div class="field-head"><span>Cjeline</span>
+            <span class="row tight"><button class="link-btn" id="selAll">Sve</button><button class="link-btn" id="selNone">Ništa</button></span></div>
+          <div class="groups" id="topicList"></div>
+        </div>
+        <div class="field">
+          <div class="field-head"><span>Tip pitanja</span></div>
+          <div class="len" id="levelPick"></div>
+          <ul class="type-help">
+            <li><b>Osnovna</b> — gradivo iz skripte, direktno</li>
+            <li><b>Napredna</b> — detalji, formule i tablice</li>
+            <li><b>Zamke</b> — pitanja sa skrivenom klopkom</li>
+            <li><b>Slikovna</b> — karta, oznake, svjetla, animacije</li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-head"><span>Broj pitanja</span></div>
+          <div class="seg" id="lenPick"></div>
+        </div>
+      </div>
+    </details>
+
+    <div class="home-foot"><button class="link-btn quiet" id="resetBtn">Resetiraj napredak</button></div>
   </section>
 
-  <!-- QUIZ -->
+  <!-- ===================== KVIZ ===================== -->
   <section id="quiz" class="hidden">
+    <div class="quiz-top">
+      <button class="icon-btn light" id="quitBtn" aria-label="Prekini kviz" title="Prekini">✕</button>
+      <div class="qt-mid"><div class="bar"><i id="qBar"></i></div></div>
+      <span class="qt-count" id="qProgress">1 / 15</span>
+    </div>
     <div class="card">
-      <div class="qmeta">
-        <span id="qProgress">Pitanje 1</span>
-        <span id="qScore">Točno: 0</span>
-      </div>
-      <div class="bar"><i id="qBar" style="width:0%"></i></div>
-      <div style="margin:12px 0 0"><span class="chip" id="qTopic">cjelina</span></div>
+      <div class="q-meta"><span class="chip" id="qTopic">cjelina</span><span class="score" id="qScore">Točno: 0</span></div>
       <div class="qtext" id="qText">…</div>
       <div class="qvisual" id="qVisual"></div>
       <div class="choices" id="qChoices"></div>
       <div id="qInput" class="hidden"><input type="text" id="answerInput" placeholder="Upiši odgovor…" autocomplete="off"></div>
-
       <div id="hintWrap"></div>
       <div id="feedbackWrap"></div>
-
-      <div class="toolbar">
-        <button class="btn-ghost" id="hintBtn">💡 Hint</button>
-        <div class="row">
-          <button class="btn-ghost" id="quitBtn">Prekini</button>
-          <button class="btn-ghost hidden" id="revealBtn">Prikaži odgovor</button>
-          <button class="btn-primary hidden" id="checkBtn">Provjeri</button>
-          <button class="btn-primary hidden" id="nextBtn">Sljedeće →</button>
-        </div>
-      </div>
+    </div>
+    <div class="actionbar">
+      <button class="btn-ghost" id="hintBtn">💡 Pomoć</button>
+      <button class="btn-ghost hidden" id="revealBtn">Prikaži odgovor</button>
+      <button class="btn-primary hidden" id="checkBtn">Provjeri</button>
+      <button class="btn-primary hidden" id="nextBtn">Sljedeće →</button>
     </div>
   </section>
 
-  <!-- RESULT -->
+  <!-- ===================== REZULTAT ===================== -->
   <section id="result" class="hidden">
     <div class="card center">
-      <h2 class="plain">Gotovo! 🎉</h2>
+      <div class="res-ic">🏁</div>
       <div class="big" id="resScore">0 / 0</div>
       <div class="muted" id="resPct">0%</div>
     </div>
     <div class="card">
-      <h2 class="plain">Po cjelinama (ova runda)</h2>
+      <h2 class="plain">Po cjelinama</h2>
       <div class="stat-grid" id="resByTopic"></div>
     </div>
-    <div class="card">
-      <div class="row stack">
-        <button class="btn-primary" id="againBtn">▶️ Novi kviz (iste postavke)</button>
-        <button class="btn-dark hidden" id="resReviewWrong">🔁 Ponovi pitanja koja sam pogriješio</button>
-        <button class="btn-ghost" id="homeBtn">🏠 Početna</button>
-      </div>
+    <div class="stack-btns">
+      <button class="btn-primary btn-lg" id="againBtn">Nova runda →</button>
+      <button class="btn-dark hidden" id="resReviewWrong">🔁 Ponovi pogrešna pitanja</button>
+      <button class="btn-ghost" id="homeBtn">Na početak</button>
     </div>
   </section>
 
-  <!-- STATS -->
+  <!-- ===================== STATISTIKA ===================== -->
   <section id="stats" class="hidden">
     <div class="card center">
-      <h2 class="plain">Statistika</h2>
+      <div class="label">Ukupno odgovoreno</div>
       <div class="big" id="stTotal">0</div>
-      <div class="muted">odgovorenih pitanja • točnost <span id="stAcc">–</span></div>
+      <div class="muted">točnost <span id="stAcc">–</span></div>
     </div>
     <div class="card">
       <h2 class="plain">Savladanost po cjelinama</h2>
       <div class="stat-grid" id="stByTopic"></div>
     </div>
-    <div class="card">
-      <button class="btn-ghost" id="stBackBtn">🏠 Početna</button>
-    </div>
+    <div class="stack-btns"><button class="btn-ghost" id="stBackBtn">Na početak</button></div>
   </section>
   </main>
 
-  <footer>Aplikacija radi lokalno u pregledniku, bez interneta. Pitanja prate službeni program za voditelja brodice kategorije A i B.<br>Demo pripremljen za <b>Boat Training Rovinj</b> · <a href="https://boat-training-rovinj.eu/">boat-training-rovinj.eu</a></footer>
+  <footer>Radi u pregledniku, bez prijave. Pitanja prate službeni program za voditelja brodice kategorije A i B.<br>Demo za <b>Boat Training Rovinj</b> · <a href="https://boat-training-rovinj.eu/">boat-training-rovinj.eu</a></footer>
 </div>
 
 <script>
@@ -366,9 +455,9 @@ const TOPICS = {
   uzlovi:  "Konopi i uzlovi",
   motori:  "Motori (motoristika)",
   sigurnost:"Sigurnost i postupci",
-  pula:"⭐ Najverovatnija pitanja (Pula)"
+  pula:"⭐ Najvjerojatnija ispitna pitanja (Pula)"
 };
-const LEVELS = { osn:"Osnovna", napr:"Napredna", trik:"Triki 😈", viz:"Vizuelna 🖼️" };
+const LEVELS = { osn:"Osnovna", napr:"Napredna", trik:"Zamke 🎯", viz:"Slikovna 🧭" };
 
 const QUESTIONS = [
 /* ---------- NAUTIČKA KARTA ---------- */
@@ -1805,7 +1894,7 @@ function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=(Math.ra
 let session = null;
 
 function currentTopics(){
-  const boxes = [...document.querySelectorAll('#topicList input:checked')];
+  const boxes = [...document.querySelectorAll('#topicList input.tp:checked')];
   return boxes.map(b=>b.value);
 }
 
@@ -1815,21 +1904,62 @@ const TOPIC_ICONS = {
   vjetar:"🌬️", zvuk:"📢", sudar:"⚠️", svjetla:"🚢", radio:"📻", spel:"🔤",
   uzlovi:"🪢", motori:"⚙️", sigurnost:"🛟", pula:"⭐"
 };
+const TOPIC_GROUPS = [
+  ["Ispit", ["pula"]],
+  ["Navigacija", ["karta","kurs","vjetar"]],
+  ["Oznake, svjetla i signali", ["oznake","svjet","svjetla","zvuk"]],
+  ["Pravila i sigurnost", ["sudar","sidro","sigurnost"]],
+  ["Brod i oprema", ["oprema","motori","uzlovi"]],
+  ["Komunikacija", ["radio","spel"]]
+];
 function buildTopics(){
   const list = document.getElementById('topicList');
   list.innerHTML='';
   const saved = progress.prefs.topics;
-  Object.entries(TOPICS).forEach(([k,label])=>{
-    const checked = !saved || saved.includes(k);
-    const total = QUESTIONS.filter(q=>q.topic===k).length;
-    const clean = label.replace(/^⭐\s*/,'');
-    const l = document.createElement('label');
-    l.className='topic';
-    l.innerHTML = `<input type="checkbox" value="${k}" ${checked?'checked':''}>
-      <span class="ic">${TOPIC_ICONS[k]||'•'}</span>
-      <span class="lbl">${clean} <span class="cnt">(${total})</span></span>`;
-    list.appendChild(l);
+  const grouped = TOPIC_GROUPS.flatMap(g=>g[1]);
+  const extra = Object.keys(TOPICS).filter(k=>!grouped.includes(k));
+  const groups = extra.length ? [...TOPIC_GROUPS, ["Ostalo", extra]] : TOPIC_GROUPS;
+  groups.forEach(([gname,keys])=>{
+    const chips = keys.filter(k=>TOPICS[k]).map(k=>{
+      const checked = !saved || saved.includes(k);
+      const total = QUESTIONS.filter(q=>q.topic===k).length;
+      const clean = TOPICS[k].replace(/^⭐\s*/,'');
+      return `<label class="tchip"><input type="checkbox" class="tp" value="${k}" ${checked?'checked':''}><span>${TOPIC_ICONS[k]||''} ${clean} <em>${total}</em></span></label>`;
+    }).join('');
+    const d = document.createElement('details');
+    d.className='grp';
+    d.innerHTML = `<summary><span class="g-dot"></span><span class="g-name">${gname}</span><span class="g-count"></span><span class="chev"></span></summary>
+      <div class="grp-body"><div class="tchips">${chips}</div><button type="button" class="link-btn g-toggle">Odaberi sve u grupi</button></div>`;
+    list.appendChild(d);
   });
+  list.querySelectorAll('.tp').forEach(i=>i.addEventListener('change',refreshTopics));
+  list.querySelectorAll('.g-toggle').forEach(b=>b.addEventListener('click',()=>{
+    const boxes=[...b.closest('details').querySelectorAll('.tp')];
+    const allOn=boxes.every(i=>i.checked);
+    boxes.forEach(i=>i.checked=!allOn);
+    refreshTopics();
+  }));
+  refreshTopics();
+}
+function refreshTopics(){
+  document.querySelectorAll('#topicList details.grp').forEach(d=>{
+    const boxes=[...d.querySelectorAll('.tp')], on=boxes.filter(i=>i.checked).length;
+    d.querySelector('.g-count').textContent = `${on}/${boxes.length}`;
+    d.querySelector('.g-dot').className = 'g-dot' + (on===boxes.length?' on':on?' part':'');
+    d.querySelector('.g-toggle').textContent = on===boxes.length ? 'Poništi grupu' : 'Odaberi sve u grupi';
+  });
+  refreshSummary();
+}
+function refreshSummary(){
+  const total=Object.keys(TOPICS).length, t=currentTopics().length;
+  const lv=currentLevels(), len=progress.prefs.len;
+  const tTxt = t===total ? 'sve cjeline' : `${t} od ${total} cjelina`;
+  const lTxt = lv.length===Object.keys(LEVELS).length ? 'svi tipovi'
+    : (lv.map(k=>LEVELS[k].split(' ')[0].toLowerCase()).join(', ') || 'nijedan tip');
+  const nTxt = len==='all' ? 'sva pitanja' : `${len} pitanja`;
+  const sum=document.getElementById('customSummary'); if(sum) sum.textContent = `${tTxt} · ${lTxt} · ${nTxt}`;
+  const meta=document.getElementById('ctaMeta');
+  if(meta) meta.textContent = `${nTxt} · ${tTxt}` + (len==='all' ? '' : ` · oko ${Math.max(3,Math.round(len*0.5))} min`);
 }
 function buildLevels(){
   const wrap = document.getElementById('levelPick');
@@ -1839,7 +1969,7 @@ function buildLevels(){
     const b=document.createElement('button');
     b.textContent=label; b.dataset.k=k;
     if(sel.includes(k)) b.classList.add('sel');
-    b.onclick=()=>{ b.classList.toggle('sel'); progress.prefs.levels=currentLevels(); persist(); };
+    b.onclick=()=>{ b.classList.toggle('sel'); progress.prefs.levels=currentLevels(); persist(); refreshSummary(); };
     wrap.appendChild(b);
   });
 }
@@ -1855,6 +1985,7 @@ function buildLen(){
     b.onclick=()=>{ progress.prefs.len=o.v; persist(); buildLen(); };
     wrap.appendChild(b);
   });
+  refreshSummary();
 }
 function updateHomeProgress(){
   const ids = Object.keys(progress.q);
@@ -1869,20 +2000,28 @@ function updateHomeProgress(){
   QUESTIONS.forEach(q=>{const s=progress.q[q.id]; if(s){ans+=s.seen;cor+=s.correct;}});
   const acc = ans? Math.round(cor/ans*100):0;
   document.getElementById('homeSummary').textContent =
-    seen===0 ? "Još nisi počeo. Odaberi celine i kreni."
+    seen===0 ? "Još nisi počeo. Odaberi cjeline i kreni."
     : `Vidio si ${seen}/${totalQ} različitih pitanja • ukupno ${ans} odgovora • točnost ${acc}%.`;
+  document.getElementById('progressCard').classList.toggle('hidden', seen===0);
+  document.getElementById('stepsCard').classList.toggle('hidden', seen>0);
+  document.getElementById('startBtn').innerHTML = (seen ? 'Nastavi vježbu' : 'Započni kviz') + ' <span aria-hidden="true">→</span>';
+  const wrong = QUESTIONS.filter(q=>{const s=progress.q[q.id]; return s && s.wrong>0 && s.box<=2;}).length;
+  document.getElementById('wrongCount').textContent = wrong
+    ? `${wrong} ${wrong===1?'pitanje koje':'pitanja koja'} još nisi svladao` : 'Još nema grešaka — prvo odradi jedan kviz';
+  document.getElementById('reviewWrongBtn').classList.toggle('is-empty', !wrong);
 }
 
 /* ---------- navigation ---------- */
 function show(id){
   ['home','quiz','result','stats'].forEach(s=>document.getElementById(s).classList.toggle('hidden', s!==id));
-  const hero=document.querySelector('.hero'); if(hero) hero.classList.toggle('compact', id!=='home');
+  const hero=document.querySelector('.hero');
+  if(hero){ hero.classList.toggle('compact', id!=='home'); hero.classList.toggle('gone', id==='quiz'); }
   window.scrollTo(0,0);
 }
 
 /* ---------- start quiz ---------- */
 function startQuiz(list){
-  if(!list || list.length===0){ alert("Nema pitanja za odabrane celine."); return; }
+  if(!list || list.length===0){ alert("Nema pitanja za odabrane cjeline."); return; }
   session = {
     queue: list.slice(),
     idx:0, total:list.length,
@@ -1898,7 +2037,7 @@ function renderQuestion(){
   const q = session.queue[session.idx];
   session.currentQ = q;
   session.answeredThis = false;
-  document.getElementById('qProgress').textContent = `Pitanje ${session.idx+1} / ${session.queue.length}`;
+  document.getElementById('qProgress').textContent = `${session.idx+1} / ${session.queue.length}`;
   document.getElementById('qScore').textContent = `Točno: ${session.correct}`;
   document.getElementById('qBar').style.width = Math.round(session.idx/session.queue.length*100)+'%';
   document.getElementById('qTopic').textContent = TOPICS[q.topic];
@@ -2118,17 +2257,19 @@ function showStats(){
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 /* ---------- event wiring ---------- */
-document.getElementById('selAll').onclick=()=>document.querySelectorAll('#topicList input').forEach(i=>i.checked=true);
-document.getElementById('selNone').onclick=()=>document.querySelectorAll('#topicList input').forEach(i=>i.checked=false);
+document.getElementById('selAll').onclick=()=>{ document.querySelectorAll('#topicList input.tp').forEach(i=>i.checked=true); refreshTopics(); };
+document.getElementById('selNone').onclick=()=>{ document.querySelectorAll('#topicList input.tp').forEach(i=>i.checked=false); refreshTopics(); };
+document.getElementById('quickPula').onclick=()=>startQuiz(pickQuestions(['pula'], progress.prefs.len, Object.keys(LEVELS)));
+document.getElementById('quickViz').onclick=()=>startQuiz(pickQuestions(Object.keys(TOPICS), progress.prefs.len, ['viz']));
 
 document.getElementById('startBtn').onclick=()=>{
   const topics=currentTopics();
   const levels=currentLevels();
-  if(topics.length===0){ alert("Odaberi barem jednu celinu."); return; }
-  if(levels.length===0){ alert("Odaberi barem jedan tip pitanja (Osnovna/Napredna/Triki/Vizuelna)."); return; }
+  if(topics.length===0){ document.getElementById('customPanel').open=true; alert("Odaberi barem jednu cjelinu u „Prilagodi kviz”."); return; }
+  if(levels.length===0){ document.getElementById('customPanel').open=true; alert("Odaberi barem jedan tip pitanja (Osnovna/Napredna/Zamke/Slikovna)."); return; }
   progress.prefs.topics=topics; progress.prefs.levels=levels; persist();
   const list=pickQuestions(topics, progress.prefs.len, levels);
-  if(!list.length){ alert("Nema pitanja za tu kombinaciju celina i tipova. Probaj uključiti još koji tip pitanja."); return; }
+  if(!list.length){ alert("Nema pitanja za tu kombinaciju cjelina i tipova. Probaj uključiti još koji tip pitanja."); return; }
   startQuiz(list);
 };
 document.getElementById('reviewWrongBtn').onclick=()=>{
@@ -2173,6 +2314,7 @@ document.getElementById('resetBtn').onclick=()=>{
 (function heroStats(){
   const q=document.getElementById('heroQ'), t=document.getElementById('heroT');
   if(t) t.textContent = Object.keys(TOPICS).length;
+  const v=document.getElementById('heroV'); if(v) v.textContent = QUESTIONS.filter(x=>x.level==='viz').length;
   if(q){ // count up animation
     const target=QUESTIONS.length; const start=performance.now(), dur=900;
     const step=(now)=>{const p=Math.min(1,(now-start)/dur); q.textContent=Math.round(target*(1-Math.pow(1-p,3))); if(p<1)requestAnimationFrame(step);};
