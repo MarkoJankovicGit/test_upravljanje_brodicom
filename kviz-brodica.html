@@ -1987,7 +1987,7 @@ function go(h){ if(location.hash===h) render(); else location.hash=h; }
 const routeParts=()=>location.hash.replace(/^#\/?/,'').split('/').filter(Boolean).map(decodeURIComponent);
 let pendingRoute=null;
 const NAV_USER=[['pocetna','Početna','home'],['vjezba','Vježba','target'],['lekcije','Lekcije','book'],['profil','Profil','user']];
-const NAV_ADMIN=[['admin/korisnici','Korisnici','users'],['admin/prijave','Prijave','history'],['pocetna','Aplikacija','home'],['profil','Profil','user']];
+const NAV_ADMIN=[['admin/korisnici','Korisnici','users'],['admin/prijave','Prijave','history'],['admin/racun','Račun','user']];
 function shell({title='',back=null,nav=null,chrome=true,wide=false}={}){
   const app=$('app'), items=currentUser&&currentUser.role==='admin'?NAV_ADMIN:NAV_USER;
   app.classList.toggle('has-nav', chrome && !!currentUser);
@@ -2012,6 +2012,7 @@ function render(){
   if(!currentUser){ if(r!=='prijava'){ if(r) pendingRoute=location.hash; location.replace('#/prijava'); return; } return viewLogin(); }
   if(!r||r==='prijava'){ location.replace(currentUser.role==='admin'?'#/admin/korisnici':'#/pocetna'); return; }
   if(r==='admin' && currentUser.role!=='admin'){ location.replace('#/pocetna'); return; }
+  if(r!=='admin' && currentUser.role==='admin'){ location.replace('#/admin/korisnici'); return; }
   const key=p.join('/');
   if(r!=='kviz' && r!=='rezultat' && session && !session.done){ session=null; }
   switch(true){
@@ -2027,6 +2028,7 @@ function render(){
     case key==='rezultat': return viewResult();
     case key==='admin/korisnici': return viewAdminUsers();
     case key==='admin/prijave': return viewAdminLogins();
+    case key==='admin/racun': return viewAccount();
     default: location.replace(currentUser.role==='admin'?'#/admin/korisnici':'#/pocetna');
   }
 }
@@ -2095,9 +2097,11 @@ function viewLogin(){
   setTimeout(()=>$('lEmail').focus(),50);
 }
 function enterApp(u){
-  currentUser=u; progress=loadProgress(); session=null;
+  currentUser=u; progress=u.role==='admin'?null:loadProgress(); session=null;
   const target=pendingRoute; pendingRoute=null;
-  location.replace(target && target!=='#/prijava' ? target : (u.role==='admin'?'#/admin/korisnici':'#/pocetna'));
+  const home=u.role==='admin'?'#/admin/korisnici':'#/pocetna';
+  const ok=target && target!=='#/prijava' && (u.role==='admin')===target.startsWith('#/admin');
+  location.replace(ok?target:home);
   render();
 }
 async function logout(){
@@ -2316,6 +2320,18 @@ function viewProfile(){
     if(!await confirmDlg({title:'Resetirati napredak?',text:'Brišu se svi tvoji odgovori i statistika. Ovo se ne može poništiti.',ok:'Resetiraj',danger:true})) return;
     progress={q:{},days:[],prefs:{custom:{topics:null,levels:null,len:15},last:null,lessonLevels:null}}; persist(); toast('Napredak je resetiran.'); viewProfile();
   };
+}
+
+/* ==================== ADMIN: RAČUN ==================== */
+function viewAccount(){
+  shell({title:'Račun',nav:'admin/racun'});
+  mount(`
+    <div class="card"><div class="row"><span class="i-ic dark">${icon('user')}</span>
+      <div style="min-width:0"><b>${escapeHtml(currentUser.name||currentUser.email)}</b><div class="muted small" style="overflow-wrap:anywhere">${escapeHtml(currentUser.email)} · Administrator</div></div></div></div>
+    <div class="stack" style="margin-top:16px">
+      <button class="btn secondary block" id="logoutBtn">${icon('logout','sm')} Odjavi se</button>
+    </div>`);
+  $('logoutBtn').onclick=logout;
 }
 
 /* ==================== KVIZ ==================== */
@@ -2640,7 +2656,7 @@ function drawLogins(){
 (async function boot(){
   await Auth.seed();
   const u=Auth.current();
-  if(u){ currentUser=u; progress=loadProgress(); }
+  if(u){ currentUser=u; progress=u.role==='admin'?null:loadProgress(); }
   render();
 })();
 
