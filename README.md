@@ -10,32 +10,28 @@ Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B)
 - **Slikovna i animirana pitanja** (SVG): ruža vjetrova i kursa, karta s koordinatama, kardinalne/lateralne oznake, svjetla broda, scenariji izbjegavanja sudara, karakteristike svjetala.
 - Uz svako pitanje: gdje se gradivo nalazi u skripti + pomoć (hint).
 - **Pametno ponavljanje** (Leitner) — pitanja koja grešiš vraćaju se češće.
-- **Prijava e-mailom i lozinkom**, statistika odvojena po korisniku.
-- **Admin panel**: kreiranje korisnika (e-mail + lozinka), deaktivacija, nova lozinka, brisanje, povijest prijava (uspješne i neuspješne).
+- **Prijava e-mailom i lozinkom** (Supabase Auth), napredak i statistika odvojeni po korisniku i spremljeni u bazi, dostupni s bilo kojeg uređaja.
+- **Admin panel** (uvijek hrvatski): kreiranje korisnika (e-mail + lozinka), deaktivacija, nova lozinka, brisanje, povijest prijava (uspješne i neuspješne). Admin ne vidi tuđi napredak.
 
-## Demo način — važno
+## Arhitektura
 
-Ovo je **demo bez poslužitelja**. Korisnici, lozinke (SHA-256 sa soli), napredak i povijest prijava spremaju se u `localStorage` preglednika:
+- **Frontend:** jedan statični HTML (`kviz-brodica.html`), GitHub Pages. Bez build koraka i bez vanjskih biblioteka; prema Supabaseu ide običan `fetch`.
+- **Baza i prijava:** Supabase (projekt `ouavhtfnhvfzyzzftyks`, eu-north-1). Šema i pravila pristupa su u [`supabase/`](supabase/README.md).
+- **Upravljanje korisnicima:** Edge funkcija `admin-users` (kreiranje, nova lozinka, deaktivacija, brisanje). Samo ona koristi tajni `service_role` ključ, koji nikad nije u pregledniku ni u repou.
+- **U pregledniku** su samo URL projekta i javni (publishable) ključ; zaštitu daju RLS pravila u bazi.
+- Javna registracija je isključena: korisnike dodaje isključivo admin.
 
-- korisnik kreiran u adminu može se prijaviti **samo u istom pregledniku/uređaju**;
-- admin vidi prijave **samo s tog uređaja**;
-- zaštita je samo simulacija (klijentska strana) — nije za stvarne korisnike.
+## Ograničenja i sljedeći koraci
 
-Sav pristup podacima ide kroz objekte `KV` i `Auth` u skripti. Za produkciju se oni zamjenjuju API pozivima prema bazi (npr. Supabase/Postgres), bez promjene ekrana.
-
-### Demo računi (seed)
-
-| Uloga | E-mail | Lozinka |
-|---|---|---|
-| Administrator | `admin@demo.hr` | `admin-demo-2026` |
-| Učenik | `ucenik@demo.hr` | `ucenik-demo-2026` |
-
-Na ekranu prijave postoji i „Demo pristup" koji popunjava formu.
+- Pitanja iz skripte su i dalje u HTML-u (vidljiva prije prijave). Za produkciju ih treba premjestiti u bazu iza prijave.
+- Povijest neuspjelih prijava upisuje preglednik (funkcija `record_failed_login`, s ograničenjem broja zapisa). Za strožu kontrolu treba prijavu provući kroz Edge funkciju ili Auth Hook.
+- Nema oporavka zaboravljene lozinke (admin postavlja novu). Za to treba slanje e-pošte.
+- Jezik se pamti po uređaju, ne po računu.
 
 ## Pokretanje
 
 - Online: GitHub Pages (`main` grana).
-- Lokalno: `python -m http.server 5178` u ovom folderu pa otvori `http://localhost:5178/kviz-brodica.html` (prijava treba `localStorage` i Web Crypto, koji ne rade pri otvaranju fajla dvoklikom u svim preglednicima).
+- Lokalno: `python -m http.server 5178` u ovom folderu, pa `http://localhost:5178/kviz-brodica.html` (prijava traži `https` ili `localhost`).
 
 ## Napomena o izvoru
 

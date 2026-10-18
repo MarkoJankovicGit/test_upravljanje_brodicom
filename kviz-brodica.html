@@ -266,6 +266,9 @@
   .lang-pop button:hover{background:var(--surface-2)}
   .lang-pop button[aria-checked=true]{color:var(--primary)}
   .quiz-top .langmenu-slot,.topbar .langmenu-slot{display:flex}
+  .boot-load{display:flex;align-items:center;justify-content:center;gap:10px;padding:96px 16px;color:var(--muted);font-weight:600}
+  .boot-load .ic{animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
   .lang-seg button{min-height:40px;min-width:48px;padding:0 10px;font-size:.85rem}
   .login h1{font-size:1.6rem;font-weight:800}
   .login .lead{color:var(--muted);margin:6px 0 24px}
@@ -366,7 +369,7 @@
       <img class="logo-sm" id="topLogo" src="btr-logo.jpg" alt="Boat Training Rovinj" width="32" height="32">
       <h1 id="topTitle"></h1>
       <span class="langmenu-slot"></span>
-      <span class="demo-badge" title="Demo verzija: podaci se spremaju samo u ovom pregledniku">DEMO</span>
+      <span class="demo-badge" title="Demo verzija za Boat Training Rovinj">DEMO</span>
     </header>
     <main id="view" tabindex="-1"></main>
   </div>
@@ -396,7 +399,13 @@ const I18N_UI={hr:{},en:{},de:{}};
 // [ključ, hr, en, de]; vrijednost niz = oblici množine (hr: 1/2-4/ostalo, en i de: 1/ostalo)
 ([
 ['skip','Preskoči na sadržaj','Skip to content','Zum Inhalt springen'],
-['demo.title','Demo verzija: podaci se spremaju samo u ovom pregledniku','Demo version: data is stored only in this browser','Demoversion: Die Daten werden nur in diesem Browser gespeichert'],
+['demo.title','Demo verzija za Boat Training Rovinj','Demo version for Boat Training Rovinj','Demoversion für Boat Training Rovinj'],
+['loading','Učitavanje…','Loading…','Wird geladen…'],
+['retry','Pokušaj ponovo','Try again','Erneut versuchen'],
+['login.net','Nema veze s poslužiteljem. Provjeri internet i pokušaj ponovo.','Cannot reach the server. Check your connection and try again.','Keine Verbindung zum Server. Prüfe deine Internetverbindung und versuche es erneut.'],
+['login.limit','Previše pokušaja. Pričekaj nekoliko minuta pa pokušaj ponovo.','Too many attempts. Wait a few minutes and try again.','Zu viele Versuche. Warte einige Minuten und versuche es erneut.'],
+['login.expired','Sesija je istekla. Prijavi se ponovo.','Your session expired. Please sign in again.','Die Sitzung ist abgelaufen. Bitte melde dich erneut an.'],
+['sync.err','Napredak se nije spremio. Pokušavam ponovo.','Your progress could not be saved. Retrying.','Der Fortschritt konnte nicht gespeichert werden. Neuer Versuch.'],
 ['back','Natrag','Back','Zurück'],
 ['close','Zatvori','Close','Schließen'],
 ['cancel','Odustani','Cancel','Abbrechen'],
@@ -2061,11 +2070,14 @@ applyQuestionLang();
 const tokV=s=>String(s||'').replace(/\{\{([\w.]+)\}\}/g,(m,k)=>t(k)); // tekst u SVG slikama prati jezik
 
 /* ============================================================
-   SLOJ PODATAKA (DEMO) — sve ide kroz KV + Auth.
-   U produkciji: Auth.* i KV pozivi postaju API pozivi (baza),
-   ekrani se ne mijenjaju.
+   SLOJ PODATAKA — Supabase (prijava, baza, Edge funkcija).
+   Bez vanjskih biblioteka: samo fetch prema Auth i REST API-ju.
+   U preglednik ide SAMO javni (publishable) ključ; zaštitu daje RLS u bazi,
+   a pisanje korisnika radi Edge funkcija admin-users (service_role ostaje na serveru).
    ============================================================ */
-const K_USERS="btr_users", K_LOGS="btr_logins", K_SESSION="btr_session", STORE_KEY="kvizBrodicaV1";
+const SB_DEFAULT_URL="https://ouavhtfnhvfzyzzftyks.supabase.co";
+const SB_KEY="sb_publishable_9i6_jQOWo1djn9tIUSLIUw_mjc2givt";
+const K_SESSION="btr_sb_session";
 const _mem={};
 const KV={
   get(k){ try{ return localStorage.getItem(k); }catch(e){ return (k in _mem)?_mem[k]:null; } },
@@ -2074,58 +2086,179 @@ const KV={
   json(k,d){ try{ const v=this.get(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
   put(k,o){ this.set(k,JSON.stringify(o)); }
 };
-function rid(){ try{ return crypto.randomUUID(); }catch(e){ return Date.now().toString(36)+Math.random().toString(36).slice(2,10); } }
-async function hashPw(pw,salt){
-  const data=new TextEncoder().encode(salt+":"+pw);
-  try{ const h=await crypto.subtle.digest("SHA-256",data); return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join(""); }
-  catch(e){ let h=5381; for(const b of data) h=((h<<5)+h+b)>>>0; return "x"+h.toString(16); } // samo bez HTTPS-a (demo)
-}
+const IS_LOCAL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const SB_URL=(IS_LOCAL&&KV.get('btr_sb_override'))||SB_DEFAULT_URL; // zamjena adrese dopuštena samo na lokalnom računalu (testovi)
 const normEmail=e=>(e||"").trim().toLowerCase();
 const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
-function genPassword(){ const a="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; const r=new Uint32Array(10);
-  try{ crypto.getRandomValues(r); }catch(e){ for(let i=0;i<10;i++) r[i]=Math.random()*1e9; } r.forEach(n=>s+=a[n%a.length]); return s; }
+function genPassword(){ const a="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; const r=new Uint32Array(12);
+  try{ crypto.getRandomValues(r); }catch(e){ for(let i=0;i<12;i++) r[i]=Math.random()*1e9; } r.forEach(n=>s+=a[n%a.length]); return s; }
 
-// Demo računi (seed) — samo za prezentaciju
-const DEMO_ACCOUNTS={ admin:{email:"admin@demo.hr",password:"admin-demo-2026",name:"Administrator",role:"admin"},
-                      user:{email:"ucenik@demo.hr",password:"ucenik-demo-2026",name:"Demo učenik",role:"user"} };
+class ApiError extends Error{ constructor(message,code,status){ super(message); this.code=code; this.status=status; } }
+
+let SESSION=KV.json(K_SESSION,null), _refreshing=null;
+function saveSession(s){ SESSION=s; if(s) KV.put(K_SESSION,s); else KV.del(K_SESSION); }
+
+async function rawFetch(path,{init,timeout=20000}={}){
+  const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),timeout);
+  try{ return await fetch(SB_URL+path,{...init,signal:ctl.signal}); }
+  catch(e){ throw new ApiError('Nema veze s poslužiteljem.','network',0); }
+  finally{ clearTimeout(to); }
+}
+async function refreshSession(){
+  if(_refreshing) return _refreshing;
+  _refreshing=(async()=>{
+    if(!SESSION||!SESSION.refresh_token) throw new ApiError('Sesija je istekla.','auth',401);
+    const res=await rawFetch('/auth/v1/token?grant_type=refresh_token',{init:{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SESSION.refresh_token})}});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||!data.access_token){ if(res.status>=500) throw new ApiError('Poslužitelj nije dostupan.','network',res.status); saveSession(null); throw new ApiError('Sesija je istekla.','auth',res.status); }
+    saveSession({access_token:data.access_token,refresh_token:data.refresh_token,expires_at:Date.now()+(data.expires_in||3600)*1000,user_id:(data.user&&data.user.id)||SESSION.user_id});
+    return SESSION.access_token;
+  })();
+  try{ return await _refreshing; } finally{ _refreshing=null; }
+}
+async function accessToken(){
+  if(!SESSION) return null;
+  if(SESSION.expires_at-Date.now()<60000) return await refreshSession();
+  return SESSION.access_token;
+}
+function authLost(){
+  saveSession(null);
+  if(typeof currentUser!=='undefined'&&currentUser){
+    currentUser=null; UI_ADMIN=false; progress=null; session=null; clearTimeout(_syncTimer); DIRTY.clear();
+    location.replace('#/prijava'); render(); toast(t('login.expired'),'alert');
+  }
+}
+// zahtjev s prijavljenim korisnikom; jedan pokušaj obnove tokena pri 401
+async function sb(path,{method='GET',body,headers={},auth=true,keepalive=false,timeout}={}){
+  const go=async tok=>{
+    const h={apikey:SB_KEY,...headers};
+    if(body!==undefined) h['Content-Type']='application/json';
+    if(auth&&tok) h.Authorization='Bearer '+tok;
+    return rawFetch(path,{timeout,init:{method,headers:h,body:body!==undefined?JSON.stringify(body):undefined,keepalive}});
+  };
+  let tok=null;
+  if(auth){ try{ tok=await accessToken(); }catch(e){ if(e.code==='auth') authLost(); throw e; } if(!tok){ authLost(); throw new ApiError('Nisi prijavljen.','auth',401); } }
+  let res=await go(tok);
+  if(res.status===401&&auth){
+    try{ tok=await refreshSession(); }catch(e){ if(e.code==='auth') authLost(); throw e; }
+    res=await go(tok);
+    if(res.status===401){ authLost(); throw new ApiError('Sesija je istekla.','auth',401); }
+  }
+  return res;
+}
+async function sbJson(path,opt){
+  const res=await sb(path,opt); const txt=await res.text(); let data=null; try{ data=txt?JSON.parse(txt):null; }catch(e){}
+  if(!res.ok) throw new ApiError((data&&(data.error||data.message||data.msg))||'Greška poslužitelja.',(data&&(data.error_code||data.code))||'http',res.status);
+  return {data,res};
+}
+
+const mapProfile=r=>r?{id:r.id,email:r.email,name:r.full_name||'',role:r.role,active:r.active,
+  createdAt:r.created_at?Date.parse(r.created_at):null,lastLogin:r.last_login_at?Date.parse(r.last_login_at):null,loginCount:r.login_count||0}:null;
+const periodFrom=p=>{ if(p==='all') return 0; const d=new Date(); d.setHours(0,0,0,0); return d.getTime()-(+p-1)*864e5; };
 
 const Auth={
-  users(){ return KV.json(K_USERS,[]); },
-  saveUsers(u){ KV.put(K_USERS,u); },
-  logs(){ return KV.json(K_LOGS,[]); },
-  addLog(e){ const l=this.logs(); l.unshift(e); KV.put(K_LOGS,l.slice(0,3000)); },
-  async seed(){ if(this.users().length) return; for(const a of Object.values(DEMO_ACCOUNTS)) await this.createUser(a,null); },
-  async createUser({email,password,name,role},byId){
-    email=normEmail(email);
-    if(!validEmail(email)) throw new Error("Upiši ispravnu e-mail adresu.");
-    if(!password || password.length<8) throw new Error("Lozinka mora imati najmanje 8 znakova.");
-    const users=this.users();
-    if(users.some(u=>u.email===email)) throw new Error("Korisnik s tim e-mailom već postoji.");
-    const salt=rid();
-    const u={id:rid(),email,name:(name||"").trim(),role:role==="admin"?"admin":"user",active:true,salt,
-      pw:await hashPw(password,salt),createdAt:Date.now(),createdBy:byId||null,lastLogin:null,loginCount:0};
-    users.push(u); this.saveUsers(users); return u;
-  },
   async login(email,password){
     email=normEmail(email);
-    const users=this.users(), u=users.find(x=>x.email===email);
-    const pwOk = !!u && (await hashPw(password,u.salt))===u.pw;
-    const ok = pwOk && u.active;
-    this.addLog({at:Date.now(),email,userId:u?u.id:null,ok,
-      reason: ok?"":(!u?"Nepoznat e-mail":!pwOk?"Pogrešna lozinka":"Račun deaktiviran")});
-    if(!ok) throw Object.assign(new Error(pwOk && !u.active ? "Račun je deaktiviran. Javi se Boat Training Rovinj." : "Pogrešan e-mail ili lozinka."),{code:(pwOk && !u.active)?"off":"bad"});
-    u.lastLogin=Date.now(); u.loginCount=(u.loginCount||0)+1; this.saveUsers(users);
-    KV.put(K_SESSION,{userId:u.id,at:Date.now()});
+    const res=await rawFetch('/auth/v1/token?grant_type=password',{init:{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password})}});
+    const data=await res.json().catch(()=>({}));
+    if(res.status===429) throw new ApiError('limit','limit',429);
+    if(res.status>=500) throw new ApiError('network','network',res.status);
+    if(!res.ok||!data.access_token){
+      const banned=data&&(data.error_code==='user_banned'||/banned/i.test(data.msg||data.message||''));
+      try{ await rawFetch('/rest/v1/rpc/record_failed_login',{init:{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_email:email,p_reason:banned?'banned':null})}}); }catch(e){}
+      throw new ApiError(banned?'off':'bad',banned?'off':'bad',res.status);
+    }
+    saveSession({access_token:data.access_token,refresh_token:data.refresh_token,expires_at:Date.now()+(data.expires_in||3600)*1000,user_id:data.user.id});
+    let u=null; try{ u=await this.profile(data.user.id); }catch(e){ saveSession(null); throw e; }
+    if(!u||!u.active){ await this.logout(); throw new ApiError('off','off',403); }
+    try{ await sbJson('/rest/v1/rpc/record_login',{method:'POST',body:{}}); u.loginCount+=1; u.lastLogin=Date.now(); }catch(e){}
     return u;
   },
-  current(){ const s=KV.json(K_SESSION,null); if(!s) return null; const u=this.users().find(x=>x.id===s.userId); return u&&u.active?u:null; },
-  logout(){ KV.del(K_SESSION); },
-  update(id,fn){ const users=this.users(); const u=users.find(x=>x.id===id); if(!u) return; fn(u); this.saveUsers(users); },
-  async setPassword(id,pw){ if(!pw||pw.length<8) throw new Error("Lozinka mora imati najmanje 8 znakova.");
-    const salt=rid(), h=await hashPw(pw,salt); this.update(id,u=>{u.salt=salt;u.pw=h;}); },
-  activeAdmins(){ return this.users().filter(u=>u.role==="admin"&&u.active); },
-  remove(id){ this.saveUsers(this.users().filter(u=>u.id!==id)); KV.del(STORE_KEY+":"+id); }
+  async profile(id){ const {data}=await sbJson('/rest/v1/profiles?select=*&id=eq.'+encodeURIComponent(id)); return mapProfile(data&&data[0]); },
+  async restore(){
+    if(!SESSION) return null;
+    try{ const u=await this.profile(SESSION.user_id); if(!u||!u.active){ saveSession(null); return null; } return u; }
+    catch(e){ if(e.code==='network') throw e; saveSession(null); return null; }
+  },
+  async logout(){
+    try{ await flushSync(); }catch(e){}
+    try{ await sb('/auth/v1/logout?scope=local',{method:'POST',timeout:8000}); }catch(e){}
+    saveSession(null);
+  },
+  // ---- admin ----
+  async users(){ const {data}=await sbJson('/rest/v1/profiles?select=*&order=email.asc&limit=1000'); return (data||[]).map(mapProfile); },
+  logQS({q,status,period}){
+    let p=''; const from=periodFrom(period);
+    if(from) p+='&occurred_at=gte.'+encodeURIComponent(new Date(from).toISOString());
+    const s=String(q||'').trim().replace(/[*%,()]/g,'');
+    if(s) p+='&email=ilike.'+encodeURIComponent('*'+s.toLowerCase()+'*');
+    if(status==='ok') p+='&ok=eq.true'; else if(status==='fail') p+='&ok=eq.false';
+    return p;
+  },
+  async logs(f,limit,offset){
+    const {data}=await sbJson('/rest/v1/login_events?select=id,user_id,email,ok,reason,occurred_at&order=occurred_at.desc&limit='+limit+'&offset='+offset+this.logQS(f));
+    return (data||[]).map(r=>({id:r.id,userId:r.user_id,email:r.email,ok:r.ok,reason:r.reason,at:Date.parse(r.occurred_at)}));
+  },
+  async logCount(f){
+    const {res}=await sbJson('/rest/v1/login_events?select=id&limit=1'+this.logQS(f),{headers:{Prefer:'count=exact'}});
+    const m=/\/(\d+)$/.exec(res.headers.get('content-range')||''); return m?+m[1]:0;
+  },
+  async admin(action,payload){
+    const res=await sb('/functions/v1/admin-users',{method:'POST',body:{action,...payload}});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new ApiError(data.error||'Greška na poslužitelju.',data.code||'http',res.status);
+    return data;
+  },
+  createUser({email,password,name,role}){ return this.admin('create',{email,password,name,role}); },
+  setPassword(id,password){ return this.admin('set_password',{id,password}); },
+  setActive(ids,active){ return this.admin('set_active',{ids,active}); },
+  remove(id){ return this.admin('delete',{id}); }
 };
+
+/* ---------- napredak učenika: u memoriji, sinkronizira se u bazu ---------- */
+const DIRTY=new Set(); let _syncTimer=null, _syncFail=false;
+const blankPrefs=()=>({custom:{topics:null,levels:null,len:15},last:null,lessonLevels:null});
+const Prog={
+  async load(uid){
+    const q=encodeURIComponent(uid);
+    const [pr,st]=await Promise.all([
+      sbJson('/rest/v1/user_progress?select=question_id,box,seen,correct,wrong&user_id=eq.'+q+'&limit=5000'),
+      sbJson('/rest/v1/user_state?select=prefs,days&user_id=eq.'+q)]);
+    const p={q:{},days:[],prefs:blankPrefs()};
+    (pr.data||[]).forEach(r=>{ p.q[r.question_id]={box:r.box,seen:r.seen,correct:r.correct,wrong:r.wrong}; });
+    const s=(st.data||[])[0];
+    if(s){ if(Array.isArray(s.days)) p.days=s.days; p.prefs={...blankPrefs(),...(s.prefs||{})}; if(!p.prefs.custom) p.prefs.custom=blankPrefs().custom; }
+    DIRTY.clear(); return p;
+  },
+  async reset(uid){
+    clearTimeout(_syncTimer); DIRTY.clear();
+    const q=encodeURIComponent(uid);
+    await sbJson('/rest/v1/user_progress?user_id=eq.'+q,{method:'DELETE'});
+    await sbJson('/rest/v1/user_state?user_id=eq.'+q,{method:'PATCH',body:{prefs:blankPrefs(),days:[]}});
+  }
+};
+function persist(){
+  if(!currentUser||currentUser.role==='admin'||!progress) return;
+  clearTimeout(_syncTimer); _syncTimer=setTimeout(()=>flushSync(),1000);
+}
+async function flushSync(keepalive=false){
+  if(!currentUser||currentUser.role==='admin'||!progress) return;
+  clearTimeout(_syncTimer);
+  const uid=currentUser.id, ids=[...DIRTY]; DIRTY.clear();
+  const rows=ids.filter(id=>progress.q[id]).map(id=>({user_id:uid,question_id:id,box:progress.q[id].box,seen:progress.q[id].seen,correct:progress.q[id].correct,wrong:progress.q[id].wrong}));
+  try{
+    if(rows.length) await sbJson('/rest/v1/user_progress?on_conflict=user_id,question_id',{method:'POST',body:rows,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},keepalive});
+    await sbJson('/rest/v1/user_state?user_id=eq.'+encodeURIComponent(uid),{method:'PATCH',body:{prefs:progress.prefs,days:progress.days},headers:{Prefer:'return=minimal'},keepalive});
+    _syncFail=false;
+  }catch(e){
+    ids.forEach(id=>DIRTY.add(id));
+    if(e.code==='auth') return;
+    if(!_syncFail){ _syncFail=true; toast(t('sync.err'),'alert'); }
+    _syncTimer=setTimeout(()=>flushSync(),8000);
+  }
+}
+addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flushSync(true); });
+addEventListener('pagehide',()=>flushSync(true));
 
 /* ============================================================
    MOTOR APLIKACIJE
@@ -2200,20 +2333,7 @@ const countQ=(topics,levels)=>QUESTIONS.filter(q=>topics.includes(q.topic)&&leve
 const minutes=n=>Math.max(1,Math.round(n*0.5));
 
 /* ---------- napredak po korisniku ---------- */
-function loadProgress(){
-  let p=KV.json(STORE_KEY+":"+currentUser.id,null);
-  if(!p && currentUser.role!=="admin" && !KV.get("btr_legacy_done")){
-    const legacy=KV.json(STORE_KEY,null);
-    if(legacy && legacy.q){ p=legacy; KV.set("btr_legacy_done","1"); }
-  }
-  p=p||{}; if(!p.q) p.q={}; if(!p.days) p.days=[];
-  const old=p.prefs||{};
-  p.prefs={ custom: old.custom || {topics:old.topics||null, levels:old.levels||null, len:old.len||15},
-            last: old.last||null, lessonLevels: old.lessonLevels||null };
-  return p;
-}
-function persist(){ if(currentUser&&progress) KV.put(STORE_KEY+":"+currentUser.id, progress); }
-function qStat(id){ if(!progress.q[id]) progress.q[id]={box:0,seen:0,correct:0,wrong:0}; return progress.q[id]; }
+function qStat(id){ if(!progress.q[id]) progress.q[id]={box:0,seen:0,correct:0,wrong:0}; DIRTY.add(id); return progress.q[id]; }
 const dayKey=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 function markDay(){ const k=dayKey(); if(progress.days[progress.days.length-1]!==k){ progress.days.push(k); if(progress.days.length>400) progress.days.shift(); } }
 function streak(){
@@ -2375,6 +2495,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const open=docume
 function bindLangSwitch(){ document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>setLang(b.dataset.lang)); }
 
 /* ==================== PRIJAVA ==================== */
+const loginMsg=ex=>ex.code==='off'?t('login.off'):ex.code==='network'?t('login.net'):ex.code==='limit'?t('login.limit'):t('login.bad');
 function viewLogin(){
   UI_ADMIN=false;
   shell({chrome:false});
@@ -2392,24 +2513,23 @@ function viewLogin(){
       <button class="btn primary block" id="lBtn" type="submit">${t('login.submit')}</button>
     </form>
     <p class="muted small" style="margin-top:16px">${t('login.help')}</p>
-    <details class="demo"><summary><span class="demo-badge">DEMO</span> ${t('login.demo')}</summary>
-      <div class="row"><button type="button" class="btn secondary sm" data-demo="user">${t('login.demoUser')}</button><button type="button" class="btn secondary sm" data-demo="admin">${t('login.demoAdmin')}</button></div></details>
   </div></div>`,{focus:false});
   mountLangMenus();
   $('pwToggle').onclick=()=>{ const i=$('lPw'), s=i.type==='password'; i.type=s?'text':'password'; $('pwToggle').innerHTML=icon(s?'eyeoff':'eye'); $('pwToggle').setAttribute('aria-pressed',s); $('pwToggle').setAttribute('aria-label',s?t('login.hide'):t('login.show')); };
-  document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{ const a=DEMO_ACCOUNTS[b.dataset.demo]; $('lEmail').value=a.email; $('lPw').value=a.password; $('lBtn').focus(); });
   $('loginForm').onsubmit=async e=>{
     e.preventDefault(); const err=$('loginErr'), btn=$('lBtn');
     const email=$('lEmail').value, pw=$('lPw').value;
     if(!email.trim()||!pw){ err.innerHTML=icon('alert','sm')+`<span>${t('login.fill')}</span>`; err.classList.remove('hidden'); (email.trim()?$('lPw'):$('lEmail')).focus(); return; }
     btn.disabled=true; btn.textContent=t('login.busy');
-    try{ const u=await Auth.login(email,pw); enterApp(u); }
-    catch(ex){ err.innerHTML=icon('alert','sm')+`<span>${escapeHtml(ex.code==='off'?t('login.off'):t('login.bad'))}</span>`; err.classList.remove('hidden'); btn.disabled=false; btn.textContent=t('login.submit'); $('lPw').select(); }
+    try{ const u=await Auth.login(email,pw); await enterApp(u); }
+    catch(ex){ err.innerHTML=icon('alert','sm')+`<span>${escapeHtml(loginMsg(ex))}</span>`; err.classList.remove('hidden'); btn.disabled=false; btn.textContent=t('login.submit'); $('lPw').select(); }
   };
   setTimeout(()=>$('lEmail').focus(),50);
 }
-function enterApp(u){
-  currentUser=u; UI_ADMIN=u.role==='admin'; progress=u.role==='admin'?null:loadProgress(); session=null;
+async function enterApp(u){
+  currentUser=u; UI_ADMIN=u.role==='admin'; session=null;
+  try{ progress=u.role==='admin'?null:await Prog.load(u.id); }
+  catch(e){ currentUser=null; UI_ADMIN=false; await Auth.logout(); throw e; }
   const target=pendingRoute; pendingRoute=null;
   const home=u.role==='admin'?'#/admin/korisnici':'#/pocetna';
   const ok=target && target!=='#/prijava' && (u.role==='admin')===target.startsWith('#/admin');
@@ -2418,7 +2538,7 @@ function enterApp(u){
 }
 async function logout(){
   if(!await confirmDlg({title:t('logout.t'),text:UI_ADMIN?'Želiš li se odjaviti?':t('logout.d'),ok:t('pr.logout')})) return;
-  Auth.logout(); currentUser=null; UI_ADMIN=false; progress=null; session=null; location.replace('#/prijava'); render();
+  await Auth.logout(); currentUser=null; UI_ADMIN=false; progress=null; session=null; location.replace('#/prijava'); render();
 }
 
 /* ==================== POČETNA ==================== */
@@ -2634,7 +2754,7 @@ function viewProfile(){
   $('logoutBtn').onclick=logout;
   $('resetBtn').onclick=async()=>{
     if(!await confirmDlg({title:t('pr.resetT'),text:t('pr.resetD'),ok:t('pr.resetOk'),danger:true})) return;
-    progress={q:{},days:[],prefs:{custom:{topics:null,levels:null,len:15},last:null,lessonLevels:null}}; persist(); toast(t('pr.resetDone')); viewProfile();
+    try{ await Prog.reset(currentUser.id); progress=await Prog.load(currentUser.id); toast(t('pr.resetDone')); viewProfile(); }catch(e){ if(e.code!=='auth') toast(t('sync.err'),'alert'); }
   };
 }
 
@@ -2825,7 +2945,8 @@ function viewResult(){
 }
 
 /* ==================== ADMIN: KORISNICI ==================== */
-const adm={q:'',role:'all',status:'all',sel:new Set(),lq:'',lstatus:'all',lperiod:'7',llimit:50};
+const adm={q:'',role:'all',status:'all',sel:new Set(),users:[],err:null,loaded:false,lq:'',lstatus:'all',lperiod:'7',llimit:50,logs:[],logTotal:0,logOk:0,logFail:0,logErr:null,logLoaded:false};
+const errBox=(msg,retryId)=>`<div class="empty">${icon('alert')}<div>${escapeHtml(msg)}</div><p><button class="btn secondary sm" id="${retryId}">Pokušaj ponovo</button></p></div>`;
 function viewAdminUsers(){
   shell({title:'Korisnici',nav:'admin/korisnici',wide:true});
   mount(`
@@ -2839,7 +2960,6 @@ function viewAdminUsers(){
     <div class="bulkbar hidden" id="bulk"><span id="bulkTxt"></span><span class="spacer"></span>
       <button class="btn secondary sm" id="bOff">${icon('ban','sm')} Deaktiviraj</button><button class="btn secondary sm" id="bOn">${icon('usercheck','sm')} Aktiviraj</button><button class="btn ghost sm" id="bClear">Poništi odabir</button></div>
     <div class="table-wrap"><table class="tbl" id="uTbl"></table></div>
-    <p class="muted small" style="margin-top:16px">${icon('alert','sm')} Demo: korisnici se spremaju samo u ovom pregledniku. U produkciji idu u bazu i prijava radi s bilo kojeg uređaja.</p>
   `);
   $('fRole').value=adm.role; $('fStatus').value=adm.status;
   $('fQ').oninput=e=>{ adm.q=e.target.value; drawUsers(); };
@@ -2848,19 +2968,27 @@ function viewAdminUsers(){
   $('newUser').onclick=()=>userDialog();
   $('bClear').onclick=()=>{ adm.sel.clear(); drawUsers(); };
   $('bOff').onclick=()=>bulkActive(false); $('bOn').onclick=()=>bulkActive(true);
-  drawUsers();
+  drawUsers(); refreshUsers();
+}
+async function refreshUsers(){
+  try{ adm.users=await Auth.users(); adm.err=null; adm.loaded=true; }catch(e){ if(e.code==='auth') return; adm.err=e.code==='network'?'Nema veze s poslužiteljem.':'Popis korisnika nije učitan.'; }
+  if(location.hash==='#/admin/korisnici'&&$('uTbl')) drawUsers();
 }
 function filteredUsers(){
   const q=adm.q.trim().toLowerCase();
-  return Auth.users().filter(u=>(!q||u.email.includes(q)||(u.name||'').toLowerCase().includes(q))
+  return adm.users.filter(u=>(!q||u.email.includes(q)||(u.name||'').toLowerCase().includes(q))
     &&(adm.role==='all'||u.role===adm.role)&&(adm.status==='all'||(adm.status==='on')===u.active))
     .sort((a,b)=>(b.lastLogin||0)-(a.lastLogin||0)||a.email.localeCompare(b.email));
 }
 function drawUsers(){
-  const all=Auth.users(), rows=filteredUsers();
+  const all=adm.users, rows=filteredUsers(), t=$('uTbl');
   [...adm.sel].forEach(id=>{ if(!all.some(u=>u.id===id)) adm.sel.delete(id); });
-  $('uCount').textContent=`${all.filter(u=>u.active).length} aktivnih · ${all.length} ukupno`;
-  const t=$('uTbl');
+  $('uCount').textContent=adm.loaded?`${all.filter(u=>u.active).length} aktivnih · ${all.length} ukupno`:'';
+  if(!adm.loaded){
+    t.innerHTML=`<tbody><tr><td>${adm.err?errBox(adm.err,'uRetry'):`<div class="empty">Učitavanje…</div>`}</td></tr></tbody>`;
+    if($('uRetry')) $('uRetry').onclick=()=>{ adm.err=null; drawUsers(); refreshUsers(); };
+    $('bulk').classList.add('hidden'); return;
+  }
   if(!rows.length){ t.innerHTML=`<tbody><tr><td><div class="empty">${icon('users')}<div>${all.length?'Nema korisnika za taj filter.':'Još nema korisnika.'}</div></div></td></tr></tbody>`; }
   else t.innerHTML=`<thead><tr><th class="cb"><input type="checkbox" id="selAllU" aria-label="Odaberi sve prikazane"></th><th>Korisnik</th><th>Uloga</th><th>Status</th><th>Zadnja prijava</th><th class="num">Prijava</th><th><span class="sr-only">Akcije</span></th></tr></thead>
     <tbody>${rows.map(u=>{ const me=u.id===currentUser.id; return `<tr class="${u.active?'':'is-off'} ${adm.sel.has(u.id)?'is-sel':''}" data-id="${u.id}">
@@ -2880,25 +3008,28 @@ function drawUsers(){
   t.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>userAction(b.closest('tr').dataset.id,b.dataset.act));
   $('bulk').classList.toggle('hidden',!adm.sel.size); $('bulkTxt').textContent=`${adm.sel.size} odabrano`;
 }
-function canDisable(u){ return !(u.role==='admin'&&u.active&&Auth.activeAdmins().length<=1); }
-function bulkActive(on){
-  let n=0, skipped=0;
-  adm.sel.forEach(id=>{ const u=Auth.users().find(x=>x.id===id); if(!u||u.id===currentUser.id) return; if(!on&&!canDisable(u)){skipped++;return;} if(u.active!==on){ Auth.update(id,x=>x.active=on); n++; } });
-  adm.sel.clear(); drawUsers();
-  toast(`${on?'Aktivirano':'Deaktivirano'}: ${n}${skipped?` · preskočeno ${skipped} (zadnji administrator)`:''}`);
+const adminErrMsg=e=>e.code==='network'?'Nema veze s poslužiteljem. Pokušaj ponovo.':(e.message||'Greška na poslužitelju.');
+async function bulkActive(on){
+  const ids=[...adm.sel]; if(!ids.length) return;
+  try{ const r=await Auth.setActive(ids,on); adm.sel.clear(); await refreshUsers();
+    toast(`${on?'Aktivirano':'Deaktivirano'}: ${r.changed}${r.skipped&&r.skipped.length?` · preskočeno ${r.skipped.length} (ti ili zadnji administrator)`:''}`); }
+  catch(e){ if(e.code!=='auth') toast(adminErrMsg(e),'alert'); }
 }
 async function userAction(id,act){
-  const u=Auth.users().find(x=>x.id===id); if(!u) return;
+  const u=adm.users.find(x=>x.id===id); if(!u) return;
   if(act==='pw') return pwDialog(u);
-  if(act==='toggle'){
-    if(u.active&&!canDisable(u)){ toast('Ne možeš deaktivirati zadnjeg administratora.','alert'); return; }
-    Auth.update(id,x=>x.active=!x.active); drawUsers(); toast(u.active?`${u.email} je deaktiviran.`:`${u.email} je aktiviran.`); return;
-  }
-  if(act==='del'){
-    if(!canDisable(u)){ toast('Ne možeš obrisati zadnjeg administratora.','alert'); return; }
-    if(!await confirmDlg({title:'Obrisati korisnika?',text:`<b>${escapeHtml(u.email)}</b> i njegov napredak bit će trajno obrisani. Povijest prijava ostaje. Ako želiš samo zabraniti pristup, deaktiviraj račun.`,ok:'Obriši',danger:true})) return;
-    Auth.remove(id); adm.sel.delete(id); drawUsers(); toast('Korisnik je obrisan.');
-  }
+  try{
+    if(act==='toggle'){
+      const r=await Auth.setActive([id],!u.active);
+      if(r.changed){ await refreshUsers(); toast(u.active?`${u.email} je deaktiviran.`:`${u.email} je aktiviran.`); }
+      else toast('Ne možeš deaktivirati zadnjeg administratora ni sebe.','alert');
+      return;
+    }
+    if(act==='del'){
+      if(!await confirmDlg({title:'Obrisati korisnika?',text:`<b>${escapeHtml(u.email)}</b> i njegov napredak bit će trajno obrisani. Povijest prijava ostaje. Ako želiš samo zabraniti pristup, deaktiviraj račun.`,ok:'Obriši',danger:true})) return;
+      await Auth.remove(id); adm.sel.delete(id); await refreshUsers(); toast('Korisnik je obrisan.');
+    }
+  }catch(e){ if(e.code!=='auth') toast(adminErrMsg(e),'alert'); }
 }
 function credsBlock(email,pw){
   const msg=`Boat Training Rovinj — kviz za voditelja brodice\nPoveznica: ${location.href.split('#')[0]}\nE-mail: ${email}\nLozinka: ${pw}`;
@@ -2915,23 +3046,26 @@ function userDialog(){
       <div class="field"><label for="nuPw">Lozinka *</label>
         <div class="pw"><input class="input" id="nuPw" type="text" autocomplete="new-password" value="${genPassword()}" required>
           <button type="button" class="icon-btn" id="nuGen" aria-label="Generiraj novu lozinku" title="Generiraj novu">${icon('refresh','sm')}</button></div>
-        <small>Najmanje 8 znakova. Predložena je sigurna lozinka.</small></div>
+        <small>8 do 72 znaka. Predložena je sigurna lozinka.</small></div>
       <div class="field"><label for="nuRole">Uloga</label><select class="input" id="nuRole"><option value="user">Učenik</option><option value="admin">Administrator</option></select></div>
     </form>`,
     foot:`<button class="btn secondary" data-close>Odustani</button><button class="btn primary" id="nuSave">Kreiraj korisnika</button>`,
     onMount:()=>{
       $('nuEmail').focus();
       $('nuGen').onclick=()=>{ $('nuPw').value=genPassword(); };
-      const save=async e=>{ if(e) e.preventDefault(); const btn=$('nuSave'); btn.disabled=true;
+      const save=async e=>{ if(e) e.preventDefault(); const btn=$('nuSave'); if(btn.disabled) return; btn.disabled=true; btn.textContent='Kreiranje…';
+        const email=$('nuEmail').value, pw=$('nuPw').value;
+        const fail=(msg,focusEl)=>{ $('nuErr').innerHTML=icon('alert','sm')+`<span>${escapeHtml(msg)}</span>`; $('nuErr').classList.remove('hidden'); btn.disabled=false; btn.textContent='Kreiraj korisnika'; focusEl.focus(); };
+        if(!validEmail(normEmail(email))) return fail('Upiši ispravnu e-mail adresu.',$('nuEmail'));
+        if(pw.length<8||pw.length>72) return fail('Lozinka mora imati 8 do 72 znaka.',$('nuPw'));
         try{
-          const pw=$('nuPw').value, u=await Auth.createUser({email:$('nuEmail').value,password:pw,name:$('nuName').value,role:$('nuRole').value},currentUser.id);
+          const u=await Auth.createUser({email,password:pw,name:$('nuName').value,role:$('nuRole').value});
           const c=credsBlock(u.email,pw);
           dialog({title:'Korisnik je kreiran',body:`<div class="alert ok">${icon('ok','sm')}<span>${escapeHtml(u.email)} može se prijaviti.</span></div>${c.html}`,
             foot:`<button class="btn secondary" id="nuMore">${icon('plus','sm')} Dodaj još jednog</button><button class="btn primary" id="nuCopy">${icon('copy','sm')} Kopiraj poruku</button>`,
             onMount:()=>{ $('nuCopy').onclick=()=>copyText(c.msg); $('nuMore').onclick=()=>userDialog(); }});
-          drawUsers();
-        }catch(ex){ $('nuErr').innerHTML=icon('alert','sm')+`<span>${escapeHtml(ex.message)}</span>`; $('nuErr').classList.remove('hidden'); btn.disabled=false;
-          (/e-mail/i.test(ex.message)?$('nuEmail'):$('nuPw')).focus(); }
+          refreshUsers();
+        }catch(ex){ if(ex.code==='auth') return; fail(adminErrMsg(ex),/e-mail/i.test(ex.message)?$('nuEmail'):$('nuPw')); }
       };
       $('nuSave').onclick=save; $('nuForm').onsubmit=save;
     }});
@@ -2945,11 +3079,14 @@ function pwDialog(u){
     foot:`<button class="btn secondary" data-close>Odustani</button><button class="btn primary" id="pwSave">Spremi lozinku</button>`,
     onMount:()=>{
       $('pwGen').onclick=()=>{ $('pwNew').value=genPassword(); };
-      $('pwSave').onclick=async()=>{ const pw=$('pwNew').value;
+      $('pwSave').onclick=async()=>{ const pw=$('pwNew').value, btn=$('pwSave');
+        const fail=m=>{ $('pwErr').innerHTML=icon('alert','sm')+`<span>${escapeHtml(m)}</span>`; $('pwErr').classList.remove('hidden'); btn.disabled=false; };
+        if(pw.length<8||pw.length>72) return fail('Lozinka mora imati 8 do 72 znaka.');
+        btn.disabled=true;
         try{ await Auth.setPassword(u.id,pw); const c=credsBlock(u.email,pw);
           dialog({title:'Lozinka je promijenjena',body:c.html,foot:`<button class="btn secondary" data-close>Zatvori</button><button class="btn primary" id="pwCopy">${icon('copy','sm')} Kopiraj poruku</button>`,
             onMount:()=>{ $('pwCopy').onclick=()=>copyText(c.msg); }});
-        }catch(ex){ $('pwErr').innerHTML=icon('alert','sm')+`<span>${escapeHtml(ex.message)}</span>`; $('pwErr').classList.remove('hidden'); } };
+        }catch(ex){ if(ex.code!=='auth') fail(adminErrMsg(ex)); } };
     }});
 }
 
@@ -2966,37 +3103,58 @@ function viewAdminLogins(){
     <div class="table-wrap"><table class="tbl no-cb" id="lTbl"></table></div>
     <div style="text-align:center;margin-top:12px"><button class="btn ghost hidden" id="lMore">Učitaj još</button></div>`);
   $('lSt').value=adm.lstatus; $('lPer').value=adm.lperiod;
-  $('lQ').oninput=e=>{ adm.lq=e.target.value; adm.llimit=50; drawLogins(); };
-  $('lSt').onchange=e=>{ adm.lstatus=e.target.value; adm.llimit=50; drawLogins(); };
-  $('lPer').onchange=e=>{ adm.lperiod=e.target.value; adm.llimit=50; drawLogins(); };
-  $('lMore').onclick=()=>{ adm.llimit+=50; drawLogins(); };
-  drawLogins();
+  let timer=null; const reload=()=>{ adm.llimit=50; clearTimeout(timer); timer=setTimeout(loadLogins,adm.lq?300:0); };
+  $('lQ').oninput=e=>{ adm.lq=e.target.value; reload(); };
+  $('lSt').onchange=e=>{ adm.lstatus=e.target.value; reload(); };
+  $('lPer').onchange=e=>{ adm.lperiod=e.target.value; reload(); };
+  $('lMore').onclick=()=>{ adm.llimit+=50; loadLogins(true); };
+  adm.logLoaded=false; drawLogins(); loadLogins();
+  if(!adm.loaded) refreshUsers();
+}
+let _logSeq=0;
+async function loadLogins(){
+  const seq=++_logSeq, f={q:adm.lq,status:adm.lstatus,period:adm.lperiod}, base={q:adm.lq,period:adm.lperiod};
+  try{
+    const [rows,okN,failN]=await Promise.all([Auth.logs(f,adm.llimit,0),Auth.logCount({...base,status:'ok'}),Auth.logCount({...base,status:'fail'})]);
+    if(seq!==_logSeq) return;
+    adm.logs=rows; adm.logOk=okN; adm.logFail=failN; adm.logTotal=adm.lstatus==='ok'?okN:adm.lstatus==='fail'?failN:okN+failN; adm.logErr=null; adm.logLoaded=true;
+  }catch(e){ if(seq!==_logSeq||e.code==='auth') return; adm.logErr=e.code==='network'?'Nema veze s poslužiteljem.':'Povijest prijava nije učitana.'; }
+  if(location.hash==='#/admin/prijave'&&$('lTbl')) drawLogins();
 }
 function drawLogins(){
-  const q=adm.lq.trim().toLowerCase(), now=new Date(); now.setHours(0,0,0,0);
-  const from=adm.lperiod==='all'?0:now.getTime()-(+adm.lperiod-1)*864e5;
-  const users=Auth.users();
-  const rows=Auth.logs().filter(l=>l.at>=from&&(!q||(l.email||'').includes(q))&&(adm.lstatus==='all'||(adm.lstatus==='ok')===!!l.ok));
-  const okN=rows.filter(l=>l.ok).length;
-  $('lCount').textContent=`${rows.length} ${plural(rows.length,'prijava','prijave','prijava')} · ${okN} uspješnih · ${rows.length-okN} neuspješnih`;
-  const t=$('lTbl');
+  const t=$('lTbl'); if(!t) return;
+  if(!adm.logLoaded){
+    $('lCount').textContent='';
+    t.innerHTML=`<tbody><tr><td>${adm.logErr?errBox(adm.logErr,'lRetry'):`<div class="empty">Učitavanje…</div>`}</td></tr></tbody>`;
+    if($('lRetry')) $('lRetry').onclick=()=>{ adm.logErr=null; drawLogins(); loadLogins(); };
+    $('lMore').classList.add('hidden'); return;
+  }
+  const rows=adm.logs, users=adm.users;
+  $('lCount').textContent=`${adm.logOk+adm.logFail} ${plural(adm.logOk+adm.logFail,'prijava','prijave','prijava')} · ${adm.logOk} uspješnih · ${adm.logFail} neuspješnih`;
   if(!rows.length){ t.innerHTML=`<tbody><tr><td><div class="empty">${icon('history')}<div>Nema prijava za taj filter.</div></div></td></tr></tbody>`; $('lMore').classList.add('hidden'); return; }
-  t.innerHTML=`<thead><tr><th>Vrijeme</th><th>Korisnik</th><th>Status</th><th>Napomena</th></tr></thead><tbody>${rows.slice(0,adm.llimit).map(l=>{
+  t.innerHTML=`<thead><tr><th>Vrijeme</th><th>Korisnik</th><th>Status</th><th>Napomena</th></tr></thead><tbody>${rows.map(l=>{
     const u=users.find(x=>x.id===l.userId); return `<tr>
       <td class="main num">${fmtTime(l.at)}</td>
       <td data-label="Korisnik"><div class="u-name">${escapeHtml(u&&u.name?u.name:(l.email||'—'))}</div>${u&&u.name?`<div class="u-mail">${escapeHtml(l.email)}</div>`:''}</td>
       <td data-label="Status">${l.ok?`<span class="badge ok">${icon('check')}Uspješna</span>`:`<span class="badge bad">${icon('x')}Neuspješna</span>`}</td>
       <td data-label="Napomena" class="muted">${escapeHtml(l.reason||'')}</td></tr>`;}).join('')}</tbody>`;
-  $('lMore').classList.toggle('hidden',rows.length<=adm.llimit);
+  $('lMore').classList.toggle('hidden',rows.length>=adm.logTotal);
 }
 
 /* ---------- start ---------- */
-(async function boot(){
-  await Auth.seed();
-  const u=Auth.current();
-  if(u){ currentUser=u; UI_ADMIN=u.role==='admin'; progress=u.role==='admin'?null:loadProgress(); }
+async function boot(){
+  $('view').innerHTML=`<div class="boot-load" role="status" aria-live="polite">${icon('refresh')}<span>${t('loading')}</span></div>`;
+  try{
+    const u=await Auth.restore();
+    if(u){ currentUser=u; UI_ADMIN=u.role==='admin'; progress=u.role==='admin'?null:await Prog.load(u.id); }
+  }catch(e){
+    $('view').innerHTML=`<div class="login"><div class="login-card"><div class="alert" role="alert">${icon('alert','sm')}<span>${escapeHtml(t('login.net'))}</span></div>
+      <button class="btn primary block" id="bootRetry">${t('retry')}</button></div></div>`;
+    $('bootRetry').onclick=boot; return;
+  }
   render();
-})();
+}
+boot();
 
 </script>
 </body>
