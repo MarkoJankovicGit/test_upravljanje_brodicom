@@ -1,23 +1,41 @@
-# Kviz — Voditelj brodice A/B
+# Kviz — Voditelj brodice A/B (Boat Training Rovinj)
 
-Mini aplikacija za samo-testiranje za teorijski ispit za upravljanje brodicom (kategorije A i B).
-
-Sve je u jednom fajlu: **[`kviz-brodica.html`](kviz-brodica.html)**. Nije potreban internet ni server — otvori fajl u browseru (dvoklik) i uči.
+Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B). Sve je u jednom fajlu: **[`kviz-brodica.html`](kviz-brodica.html)**.
 
 ## Mogućnosti
 
-- **354 pitanja** organizirana u 15 celina (nautička karta, kurs i pozicija, svjetionici, sidrenje, kardinalne/lateralne oznake, oprema i dokumentacija, vjetrovi, zvučni signali, izbjegavanje sudara, svjetla broda, radiofonija, spelovanje, konopi i uzlovi, motori, sigurnost i postupci).
-- **Tipovi pitanja**: Osnovna, Napredna, Triki (zamke) i Vizuelna.
-- **Vizuelna pitanja** (crtano kao SVG): ruža vjetrova, čitanje koordinata i kursa na karti, kardinalne/lateralne oznake, svjetla broda.
-- Uz svako pitanje piše **gdje se gradivo nalazi u skripti** (strana + poglavlje).
-- **Hint** za svako pitanje.
-- **Pametno ponavljanje** (Leitner sistem) — pitanja koja grešiš vraćaju se češće; celine se miješaju (nije linearno).
-- **Napredak i statistika** se pamte u browseru (localStorage); možeš se vraćati neograničeno puta.
+- **414 pitanja** u 16 lekcija, složenih u 6 grupa (ispitna pitanja, navigacija, oznake/svjetla/signali, pravila i sigurnost, brod i oprema, komunikacija).
+- **Složi svoj kviz** — uvijek vidljiv: lekcije, težina i vrsta (Osnovna, Napredna, Zamke, Slikovna), broj pitanja. Izbor se pamti po korisniku.
+- **Slikovna i animirana pitanja** (SVG): ruža vjetrova i kursa, karta s koordinatama, kardinalne/lateralne oznake, svjetla broda, scenariji izbjegavanja sudara, karakteristike svjetala.
+- Uz svako pitanje: gdje se gradivo nalazi u skripti + pomoć (hint).
+- **Pametno ponavljanje** (Leitner) — pitanja koja grešiš vraćaju se češće.
+- **Prijava e-mailom i lozinkom**, statistika odvojena po korisniku.
+- **Admin panel**: kreiranje korisnika (e-mail + lozinka), deaktivacija, nova lozinka, brisanje, povijest prijava (uspješne i neuspješne).
+
+## Demo način — važno
+
+Ovo je **demo bez poslužitelja**. Korisnici, lozinke (SHA-256 sa soli), napredak i povijest prijava spremaju se u `localStorage` preglednika:
+
+- korisnik kreiran u adminu može se prijaviti **samo u istom pregledniku/uređaju**;
+- admin vidi prijave **samo s tog uređaja**;
+- zaštita je samo simulacija (klijentska strana) — nije za stvarne korisnike.
+
+Sav pristup podacima ide kroz objekte `KV` i `Auth` u skripti. Za produkciju se oni zamjenjuju API pozivima prema bazi (npr. Supabase/Postgres), bez promjene ekrana.
+
+### Demo računi (seed)
+
+| Uloga | E-mail | Lozinka |
+|---|---|---|
+| Administrator | `admin@demo.hr` | `admin-demo-2026` |
+| Učenik | `ucenik@demo.hr` | `ucenik-demo-2026` |
+
+Na ekranu prijave postoji i „Demo pristup" koji popunjava formu.
+
+## Pokretanje
+
+- Online: GitHub Pages (`main` grana).
+- Lokalno: `python -m http.server 5178` u ovom folderu pa otvori `http://localhost:5178/kviz-brodica.html` (prijava treba `localStorage` i Web Crypto, koji ne rade pri otvaranju fajla dvoklikom u svim preglednicima).
 
 ## Napomena o izvoru
 
 Pitanja su izrađena isključivo iz priručnika *Nautika Klub — Voditelj brodice A i B*. Sam priručnik (PDF) nije uključen u repozitorij jer je autorski materijal.
-
-## Pokretanje
-
-Otvori `kviz-brodica.html` u bilo kojem modernom browseru. Za online verziju možeš uključiti GitHub Pages (Settings → Pages → Deploy from branch → main).
