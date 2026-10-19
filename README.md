@@ -4,7 +4,7 @@ Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B)
 
 ## Mogućnosti
 
-- **Tri jezika: hrvatski, engleski, njemački.** Cijela učenička aplikacija i svih 414 pitanja (tekst, odgovori, pomoć, gradivo, odgovori za upis) dostupni su na sva tri jezika; učenik bira jezik izbornikom u gornjoj traci (uz DEMO oznaku, na prijavi, u svim ekranima i usred kviza); promjena je odmah, bez osvježavanja i bez gubitka rezultata. **Admin panel je uvijek na hrvatskom.** Prijevodi pitanja su nacrt za stručni pregled, vidi [PREVODI-ZA-PREGLED.md](PREVODI-ZA-PREGLED.md).
+- **Tri jezika: hrvatski, engleski, njemački.** Cijela učenička aplikacija i svih 414 pitanja (tekst, odgovori, pomoć, gradivo, odgovori za upis) dostupni su na sva tri jezika; učenik bira jezik izbornikom u gornjoj traci (na prijavi, u svim ekranima i usred kviza); promjena je odmah, bez osvježavanja i bez gubitka rezultata. **Admin panel je uvijek na hrvatskom.** Prijevodi pitanja su nacrt za stručni pregled, vidi [PREVODI-ZA-PREGLED.md](PREVODI-ZA-PREGLED.md).
 - **414 pitanja** u 16 lekcija, složenih u 6 grupa (usmeni ispit, navigacija, oznake/svjetla/signali, pravila i sigurnost, brod i oprema, komunikacija).
 - **Složi vlastitu vježbu**: lekcije, težina i vrsta (Osnovna, Napredna, Zamke, Slikovna), broj pitanja. Izbor se pamti po korisniku.
 - **Slikovna i animirana pitanja** (SVG): ruža vjetrova i kursa, karta s koordinatama, kardinalne/lateralne oznake, svjetla broda, scenariji izbjegavanja sudara, karakteristike svjetala.

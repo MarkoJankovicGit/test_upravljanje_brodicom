@@ -6,6 +6,8 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Boat Training Rovinj — Kviz za voditelja brodice A/B</title>
 <meta name="theme-color" content="#0f1419">
+<link rel="icon" type="image/jpeg" href="btr-logo.jpg">
+<link rel="apple-touch-icon" href="btr-logo.jpg">
 <meta name="description" content="Interaktivna priprema za ispit za voditelja brodice kategorija A i B — Boat Training Rovinj.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,7 +74,6 @@
   .topbar .logo-sm{width:32px;height:32px;border-radius:8px;margin-left:4px}
   .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;border:none;background:transparent;cursor:pointer;color:var(--ink)}
   .icon-btn:hover{background:var(--surface-2)}
-  .demo-badge{display:inline-flex;align-items:center;font-size:.7rem;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:999px;background:var(--warn-bg);color:var(--warn)}
   main#view{max-width:720px;margin:0 auto;padding:16px 16px calc(var(--nav-h) + 40px + env(safe-area-inset-bottom));outline:none}
   main#view.wide{max-width:1120px}
   main#view.bare{padding-bottom:40px}
@@ -284,10 +285,6 @@
   .pw .icon-btn{position:absolute;right:2px;top:2px}
   .alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--bad-bg);color:var(--bad);font-weight:600;font-size:.92rem;margin-bottom:16px}
   .alert.ok{background:var(--ok-bg);color:var(--ok)}
-  .demo{margin-top:24px;padding-top:16px;border-top:1px dashed var(--line-2)}
-  .demo summary{cursor:pointer;font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:8px;list-style:none}
-  .demo summary::-webkit-details-marker{display:none}
-  .demo .row{margin-top:12px}
 
   /* ===== Admin ===== */
   .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
@@ -359,7 +356,6 @@
     </div>
     <nav id="sideNav"></nav>
     <div class="side-foot">
-      <span class="demo-badge">DEMO</span>
       <div class="who" id="sideWho"></div>
       <div class="muted small" id="sideRole"></div>
     </div>
@@ -370,7 +366,6 @@
       <img class="logo-sm" id="topLogo" src="btr-logo.jpg" alt="Boat Training Rovinj" width="32" height="32">
       <h1 id="topTitle"></h1>
       <span class="langmenu-slot"></span>
-      <span class="demo-badge" title="Demo verzija za Boat Training Rovinj">DEMO</span>
     </header>
     <main id="view" tabindex="-1"></main>
   </div>
@@ -400,7 +395,6 @@ const I18N_UI={hr:{},en:{},de:{}};
 // [ključ, hr, en, de]; vrijednost niz = oblici množine (hr: 1/2-4/ostalo, en i de: 1/ostalo)
 ([
 ['skip','Preskoči na sadržaj','Skip to content','Zum Inhalt springen'],
-['demo.title','Demo verzija za Boat Training Rovinj','Demo version for Boat Training Rovinj','Demoversion für Boat Training Rovinj'],
 ['loading','Učitavanje…','Loading…','Wird geladen…'],
 ['retry','Pokušaj ponovo','Try again','Erneut versuchen'],
 ['login.net','Nema veze s poslužiteljem. Provjeri internet i pokušaj ponovo.','Cannot reach the server. Check your connection and try again.','Keine Verbindung zum Server. Prüfe deine Internetverbindung und versuche es erneut.'],
@@ -436,9 +430,6 @@ const I18N_UI={hr:{},en:{},de:{}};
 ['login.bad','Pogrešan e-mail ili lozinka.','Wrong email or password.','E-Mail oder Passwort ist falsch.'],
 ['login.off','Račun je deaktiviran. Javi se Boat Training Rovinj.','This account is deactivated. Contact Boat Training Rovinj.','Dieses Konto ist deaktiviert. Wende dich an Boat Training Rovinj.'],
 ['login.help','Pristupne podatke dobivaš od Boat Training Rovinj. Zaboravljena lozinka? Javi se školi.','You get your login details from Boat Training Rovinj. Forgot your password? Contact the school.','Die Zugangsdaten erhältst du von Boat Training Rovinj. Passwort vergessen? Wende dich an die Schule.'],
-['login.demo','Brzi pristup za prezentaciju','Quick access for the demo','Schnellzugang für die Präsentation'],
-['login.demoUser','Učenik','Student','Teilnehmer'],
-['login.demoAdmin','Administrator','Administrator','Administrator'],
 
 ['home.hello','Bok, {name}','Hi, {name}','Hallo, {name}'],
 ['home.welcome','Dobrodošao','Welcome','Willkommen'],
@@ -2418,7 +2409,6 @@ function shell({title='',back=null,nav=null,chrome=true,wide=false}={}){
   $('bottomNav').innerHTML=html; $('sideNav').innerHTML=html;
   $('bottomNav').setAttribute('aria-label',t('nav.label')); $('sidebar').setAttribute('aria-label',t('nav.label'));
   $('skipLink').textContent=t('skip'); $('sideSub').textContent=t('side.sub');
-  document.querySelectorAll('#topbar .demo-badge').forEach(e=>e.title=t('demo.title'));
   mountLangMenus();
   if(currentUser){ $('sideWho').textContent=currentUser.name||currentUser.email; $('sideRole').textContent=isAdmin?ROLE_LABEL[roleKey(currentUser)]:(isAdm(currentUser)?t('role.both'):t('role.user')); }
   const v=$('view'); v.className=(wide?'wide ':'')+(chrome?'':'bare'); document.title=(title?title+' · ':'')+'Boat Training Rovinj';
@@ -2512,7 +2502,7 @@ function viewLogin(){
   UI_ADMIN=false;
   shell({chrome:false});
   mount(`<div class="login"><div class="login-card">
-    <div class="login-top"><img class="login-logo" src="btr-logo.jpg" alt="Boat Training Rovinj" width="72" height="72"><div class="row" style="gap:8px"><span class="langmenu-slot"></span><span class="demo-badge" title="${t('demo.title')}">DEMO</span></div></div>
+    <div class="login-top"><img class="login-logo" src="btr-logo.jpg" alt="Boat Training Rovinj" width="72" height="72"><span class="langmenu-slot"></span></div>
     <h1>${t('login.title')}</h1>
     <p class="lead">${t('login.lead')}</p>
     <form id="loginForm" novalidate>
