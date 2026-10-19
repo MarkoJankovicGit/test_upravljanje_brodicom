@@ -417,6 +417,8 @@ const I18N_UI={hr:{},en:{},de:{}};
 ['nav.profile','Profil','Profile','Profil'],
 ['side.sub','Voditelj brodice A i B','Boat operator A and B','Bootsführer A und B'],
 ['role.user','Učenik','Student','Teilnehmer'],
+['role.both','Administrator i učenik','Administrator and student','Administrator und Teilnehmer'],
+['nav.admin','Admin','Admin','Admin'],
 ['lang.label','Jezik','Language','Sprache'],
 ['n.question',['pitanje','pitanja','pitanja'],['question','questions'],['Frage','Fragen']],
 ['n.lesson',['lekcija','lekcije','lekcija'],['lesson','lessons'],['Lektion','Lektionen']],
@@ -2153,8 +2155,13 @@ async function sbJson(path,opt){
   return {data,res};
 }
 
-const mapProfile=r=>r?{id:r.id,email:r.email,name:r.full_name||'',role:r.role,active:r.active,
+const mapProfile=r=>r?{id:r.id,email:r.email,name:r.full_name||'',role:r.role,canLearn:r.can_learn!==false,active:r.active,
   createdAt:r.created_at?Date.parse(r.created_at):null,lastLogin:r.last_login_at?Date.parse(r.last_login_at):null,loginCount:r.login_count||0}:null;
+// uloge: učenik | administrator | administrator+učenik (role + canLearn)
+const isAdm=u=>!!u&&u.role==='admin';
+const learns=u=>!!u&&u.canLearn;
+const roleKey=u=>u.role==='admin'?(u.canLearn?'both':'admin'):'user';
+const ROLE_LABEL={user:'Učenik',admin:'Administrator',both:'Administrator i učenik'};
 const periodFrom=p=>{ if(p==='all') return 0; const d=new Date(); d.setHours(0,0,0,0); return d.getTime()-(+p-1)*864e5; };
 
 const Auth={
@@ -2211,6 +2218,7 @@ const Auth={
     return data;
   },
   createUser({email,password,name,role}){ return this.admin('create',{email,password,name,role}); },
+  setRole(id,role){ return this.admin('set_role',{id,role}); },
   setPassword(id,password){ return this.admin('set_password',{id,password}); },
   setActive(ids,active){ return this.admin('set_active',{ids,active}); },
   remove(id){ return this.admin('delete',{id}); }
@@ -2239,11 +2247,11 @@ const Prog={
   }
 };
 function persist(){
-  if(!currentUser||currentUser.role==='admin'||!progress) return;
+  if(!learns(currentUser)||!progress) return;
   clearTimeout(_syncTimer); _syncTimer=setTimeout(()=>flushSync(),1000);
 }
 async function flushSync(keepalive=false){
-  if(!currentUser||currentUser.role==='admin'||!progress) return;
+  if(!learns(currentUser)||!progress) return;
   clearTimeout(_syncTimer);
   const uid=currentUser.id, ids=[...DIRTY]; DIRTY.clear();
   const rows=ids.filter(id=>progress.q[id]).map(id=>({user_id:uid,question_id:id,box:progress.q[id].box,seen:progress.q[id].seen,correct:progress.q[id].correct,wrong:progress.q[id].wrong}));
@@ -2396,7 +2404,9 @@ let pendingRoute=null;
 const NAV_USER=[['pocetna','nav.home','home'],['vjezba','nav.practice','target'],['lekcije','nav.lessons','book'],['profil','nav.profile','user']];
 const NAV_ADMIN=[['admin/korisnici','Korisnici','users'],['admin/prijave','Prijave','history'],['admin/racun','Račun','user']];
 function shell({title='',back=null,nav=null,chrome=true,wide=false}={}){
-  const app=$('app'), isAdmin=currentUser&&currentUser.role==='admin', items=isAdmin?NAV_ADMIN:NAV_USER;
+  const app=$('app'), isAdmin=UI_ADMIN&&isAdm(currentUser),
+    items=isAdmin?[...NAV_ADMIN,...(learns(currentUser)?[['pocetna','Učenje','book']]:[])]
+                 :[...NAV_USER,...(isAdm(currentUser)?[['admin/korisnici','nav.admin','users']]:[])];
   app.classList.toggle('has-nav', chrome && !!currentUser);
   $('sidebar').classList.toggle('hidden', !(chrome&&currentUser));
   $('bottomNav').classList.toggle('hidden', !(chrome&&currentUser));
@@ -2410,7 +2420,7 @@ function shell({title='',back=null,nav=null,chrome=true,wide=false}={}){
   $('skipLink').textContent=t('skip'); $('sideSub').textContent=t('side.sub');
   document.querySelectorAll('#topbar .demo-badge').forEach(e=>e.title=t('demo.title'));
   mountLangMenus();
-  if(currentUser){ $('sideWho').textContent=currentUser.name||currentUser.email; $('sideRole').textContent=isAdmin?'Administrator':t('role.user'); }
+  if(currentUser){ $('sideWho').textContent=currentUser.name||currentUser.email; $('sideRole').textContent=isAdmin?ROLE_LABEL[roleKey(currentUser)]:(isAdm(currentUser)?t('role.both'):t('role.user')); }
   const v=$('view'); v.className=(wide?'wide ':'')+(chrome?'':'bare'); document.title=(title?title+' · ':'')+'Boat Training Rovinj';
 }
 function mount(html,{focus=true}={}){
@@ -2421,9 +2431,10 @@ function render(){
   const p=routeParts(), r=p[0]||'';
   if($('dlg').open) $('dlg').close();
   if(!currentUser){ if(r!=='prijava'){ if(r) pendingRoute=location.hash; location.replace('#/prijava'); return; } return viewLogin(); }
-  if(!r||r==='prijava'){ location.replace(currentUser.role==='admin'?'#/admin/korisnici':'#/pocetna'); return; }
-  if(r==='admin' && currentUser.role!=='admin'){ location.replace('#/pocetna'); return; }
-  if(r!=='admin' && currentUser.role==='admin'){ location.replace('#/admin/korisnici'); return; }
+  UI_ADMIN=isAdm(currentUser)&&r==='admin';   // administracija je uvijek na hrvatskom, učenički dio na jeziku korisnika
+  if(!r||r==='prijava'){ location.replace(isAdm(currentUser)?'#/admin/korisnici':'#/pocetna'); return; }
+  if(r==='admin' && !isAdm(currentUser)){ location.replace('#/pocetna'); return; }
+  if(r!=='admin' && !learns(currentUser)){ location.replace('#/admin/korisnici'); return; }
   const key=p.join('/');
   if(r!=='kviz' && r!=='rezultat' && session && !session.done){ session=null; }
   switch(true){
@@ -2440,7 +2451,7 @@ function render(){
     case key==='admin/korisnici': return viewAdminUsers();
     case key==='admin/prijave': return viewAdminLogins();
     case key==='admin/racun': return viewAccount();
-    default: location.replace(currentUser.role==='admin'?'#/admin/korisnici':'#/pocetna');
+    default: location.replace(isAdm(currentUser)?'#/admin/korisnici':'#/pocetna');
   }
 }
 window.addEventListener('hashchange',render);
@@ -2528,12 +2539,12 @@ function viewLogin(){
   setTimeout(()=>$('lEmail').focus(),50);
 }
 async function enterApp(u){
-  currentUser=u; UI_ADMIN=u.role==='admin'; session=null;
-  try{ progress=u.role==='admin'?null:await Prog.load(u.id); }
+  currentUser=u; UI_ADMIN=false; session=null;
+  try{ progress=learns(u)?await Prog.load(u.id):null; }
   catch(e){ currentUser=null; UI_ADMIN=false; await Auth.logout(); throw e; }
   const target=pendingRoute; pendingRoute=null;
-  const home=u.role==='admin'?'#/admin/korisnici':'#/pocetna';
-  const ok=target && target!=='#/prijava' && (u.role==='admin')===target.startsWith('#/admin');
+  const home=isAdm(u)?'#/admin/korisnici':'#/pocetna';
+  const ok=target && target!=='#/prijava' && (target.startsWith('#/admin')?isAdm(u):learns(u));
   location.replace(ok?target:home);
   render();
 }
@@ -2732,7 +2743,7 @@ function viewProfile(){
   const all=statsFor(QUESTIONS);
   mount(`
     <div class="card"><div class="row"><span class="i-ic dark">${icon('user')}</span>
-      <div style="min-width:0"><b>${escapeHtml(currentUser.name||currentUser.email)}</b><div class="muted small" style="overflow-wrap:anywhere">${escapeHtml(currentUser.email)} · ${t('role.user')}</div></div></div></div>
+      <div style="min-width:0"><b>${escapeHtml(currentUser.name||currentUser.email)}</b><div class="muted small" style="overflow-wrap:anywhere">${escapeHtml(currentUser.email)} · ${isAdm(currentUser)?t('role.both'):t('role.user')}</div></div></div></div>
     <div class="kpis">
       <div class="kpi">${ring(all.mastery,64)}<span>${t('pr.ready')}</span></div>
       <div class="kpi">${icon('check')}<b>${all.answers}</b><span>${t('pr.answers')}</span></div>
@@ -2764,7 +2775,7 @@ function viewAccount(){
   shell({title:'Račun',nav:'admin/racun'});
   mount(`
     <div class="card"><div class="row"><span class="i-ic dark">${icon('user')}</span>
-      <div style="min-width:0"><b>${escapeHtml(currentUser.name||currentUser.email)}</b><div class="muted small" style="overflow-wrap:anywhere">${escapeHtml(currentUser.email)} · Administrator</div></div></div></div>
+      <div style="min-width:0"><b>${escapeHtml(currentUser.name||currentUser.email)}</b><div class="muted small" style="overflow-wrap:anywhere">${escapeHtml(currentUser.email)} · ${ROLE_LABEL[roleKey(currentUser)]}</div></div></div></div>
     <div class="stack" style="margin-top:16px">
       <button class="btn secondary block" id="logoutBtn">${icon('logout','sm')} Odjavi se</button>
     </div>`);
@@ -2955,7 +2966,7 @@ function viewAdminUsers(){
       <button class="btn primary" id="newUser">${icon('plus','sm')} Novi korisnik</button></div>
     <div class="filters">
       <div class="search">${icon('search','sm')}<label class="sr-only" for="fQ">Traži</label><input class="input" id="fQ" type="search" placeholder="Traži po imenu ili e-mailu" value="${escapeHtml(adm.q)}"></div>
-      <label class="sr-only" for="fRole">Uloga</label><select class="input" id="fRole"><option value="all">Sve uloge</option><option value="user">Učenici</option><option value="admin">Administratori</option></select>
+      <label class="sr-only" for="fRole">Uloga</label><select class="input" id="fRole"><option value="all">Sve uloge</option><option value="user">Samo učenici</option><option value="admin">Samo administratori</option><option value="both">Administratori i učenici</option></select>
       <label class="sr-only" for="fStatus">Status</label><select class="input" id="fStatus"><option value="all">Svi statusi</option><option value="on">Aktivni</option><option value="off">Deaktivirani</option></select>
     </div>
     <div class="bulkbar hidden" id="bulk"><span id="bulkTxt"></span><span class="spacer"></span>
@@ -2978,7 +2989,7 @@ async function refreshUsers(){
 function filteredUsers(){
   const q=adm.q.trim().toLowerCase();
   return adm.users.filter(u=>(!q||u.email.includes(q)||(u.name||'').toLowerCase().includes(q))
-    &&(adm.role==='all'||u.role===adm.role)&&(adm.status==='all'||(adm.status==='on')===u.active))
+    &&(adm.role==='all'||roleKey(u)===adm.role)&&(adm.status==='all'||(adm.status==='on')===u.active))
     .sort((a,b)=>(b.lastLogin||0)-(a.lastLogin||0)||a.email.localeCompare(b.email));
 }
 function drawUsers(){
@@ -2995,11 +3006,12 @@ function drawUsers(){
     <tbody>${rows.map(u=>{ const me=u.id===currentUser.id; return `<tr class="${u.active?'':'is-off'} ${adm.sel.has(u.id)?'is-sel':''}" data-id="${u.id}">
       <td class="cb">${me?'':`<input type="checkbox" data-sel="${u.id}" ${adm.sel.has(u.id)?'checked':''} aria-label="Odaberi ${escapeHtml(u.email)}">`}</td>
       <td class="main"><div class="u-name">${escapeHtml(u.name||'—')}${me?' <span class="badge brand">ti</span>':''}</div><div class="u-mail">${escapeHtml(u.email)}</div></td>
-      <td data-label="Uloga">${u.role==='admin'?'Administrator':'Učenik'}</td>
+      <td data-label="Uloga">${ROLE_LABEL[roleKey(u)]}</td>
       <td data-label="Status">${u.active?`<span class="badge ok">${icon('check')}Aktivan</span>`:`<span class="badge bad">${icon('ban')}Deaktiviran</span>`}</td>
       <td data-label="Zadnja prijava" class="num" title="${fmtTime(u.lastLogin)}">${relTime(u.lastLogin)}</td>
       <td data-label="Prijava" class="num">${u.loginCount||0}</td>
       <td><div class="acts"><button class="btn ghost sm" data-act="pw">${icon('key','sm')} Lozinka</button>
+        <button class="btn ghost sm" data-act="role">${icon('users','sm')} Uloga</button>
         ${me?'':`<button class="btn ghost sm" data-act="toggle">${u.active?icon('ban','sm')+' Deaktiviraj':icon('usercheck','sm')+' Aktiviraj'}</button>
         <button class="btn danger-ghost sm" data-act="del" aria-label="Obriši ${escapeHtml(u.email)}">${icon('trash','sm')}</button>`}</div></td></tr>`;}).join('')}</tbody>`;
   const selectable=rows.filter(u=>u.id!==currentUser.id);
@@ -3019,6 +3031,7 @@ async function bulkActive(on){
 async function userAction(id,act){
   const u=adm.users.find(x=>x.id===id); if(!u) return;
   if(act==='pw') return pwDialog(u);
+  if(act==='role') return roleDialog(u);
   try{
     if(act==='toggle'){
       const r=await Auth.setActive([id],!u.active);
@@ -3048,7 +3061,7 @@ function userDialog(){
         <div class="pw"><input class="input" id="nuPw" type="text" autocomplete="new-password" value="${genPassword()}" required>
           <button type="button" class="icon-btn" id="nuGen" aria-label="Generiraj novu lozinku" title="Generiraj novu">${icon('refresh','sm')}</button></div>
         <small>8 do 72 znaka. Predložena je sigurna lozinka.</small></div>
-      <div class="field"><label for="nuRole">Uloga</label><select class="input" id="nuRole"><option value="user">Učenik</option><option value="admin">Administrator</option></select></div>
+      <div class="field"><label for="nuRole">Uloga</label><select class="input" id="nuRole"><option value="user">Učenik</option><option value="admin">Administrator</option><option value="both">Administrator i učenik</option></select></div>
     </form>`,
     foot:`<button class="btn secondary" data-close>Odustani</button><button class="btn primary" id="nuSave">Kreiraj korisnika</button>`,
     onMount:()=>{
@@ -3069,6 +3082,32 @@ function userDialog(){
         }catch(ex){ if(ex.code==='auth') return; fail(adminErrMsg(ex),/e-mail/i.test(ex.message)?$('nuEmail'):$('nuPw')); }
       };
       $('nuSave').onclick=save; $('nuForm').onsubmit=save;
+    }});
+}
+function roleDialog(u){
+  const cur=roleKey(u), me=u.id===currentUser.id;
+  const opt=(v,title,desc)=>`<label class="check-row" style="border:1px solid var(--line);border-radius:12px;margin-bottom:8px"><input type="radio" name="roleSel" value="${v}" ${cur===v?'checked':''} ${me&&v==='user'?'disabled':''}><span class="c-txt"><span class="c-title">${title}</span><span class="c-sub">${desc}</span></span></label>`;
+  dialog({title:'Uloga korisnika',
+    body:`<p style="margin:0 0 12px"><b>${escapeHtml(u.email)}</b></p>
+      <div class="alert hidden" id="roleErr" role="alert"></div>
+      ${opt('user','Učenik','Rješava kvizove i prati svoj napredak. Nema pristup administraciji.')}
+      ${opt('admin','Administrator','Upravlja korisnicima i vidi povijest prijava. Nema učenički dio.')}
+      ${opt('both','Administrator i učenik','Ima oba dijela i u aplikaciji prelazi između njih.')}
+      ${me?'<p class="muted small" style="margin:8px 0 0">Sebi ne možeš ukloniti administratorsku ulogu.</p>':''}`,
+    foot:`<button class="btn secondary" data-close>Odustani</button><button class="btn primary" id="roleSave">Spremi</button>`,
+    onMount:()=>{
+      $('roleSave').onclick=async()=>{
+        const v=document.querySelector('input[name=roleSel]:checked'), btn=$('roleSave');
+        if(!v||v.value===cur){ $('dlg').close(); return; }
+        btn.disabled=true;
+        try{
+          await Auth.setRole(u.id,v.value); $('dlg').close();
+          if(me){ // vlastita uloga: osvježi prijavljenog korisnika i dostupna područja
+            const fresh=await Auth.profile(u.id); if(fresh){ currentUser=fresh; progress=learns(fresh)?(progress||await Prog.load(fresh.id)):null; render(); }
+          }
+          await refreshUsers(); toast(`Uloga je promijenjena: ${ROLE_LABEL[v.value]}.`);
+        }catch(ex){ if(ex.code==='auth') return; $('roleErr').innerHTML=icon('alert','sm')+`<span>${escapeHtml(adminErrMsg(ex))}</span>`; $('roleErr').classList.remove('hidden'); btn.disabled=false; }
+      };
     }});
 }
 function pwDialog(u){
@@ -3147,7 +3186,7 @@ async function boot(){
   $('view').innerHTML=`<div class="boot-load" role="status" aria-live="polite">${icon('refresh')}<span>${t('loading')}</span></div>`;
   try{
     const u=await Auth.restore();
-    if(u){ currentUser=u; UI_ADMIN=u.role==='admin'; progress=u.role==='admin'?null:await Prog.load(u.id); }
+    if(u){ currentUser=u; UI_ADMIN=false; progress=learns(u)?await Prog.load(u.id):null; }
   }catch(e){
     $('view').innerHTML=`<div class="login"><div class="login-card"><div class="alert" role="alert">${icon('alert','sm')}<span>${escapeHtml(t('login.net'))}</span></div>
       <button class="btn primary block" id="bootRetry">${t('retry')}</button></div></div>`;

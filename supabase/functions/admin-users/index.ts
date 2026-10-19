@@ -66,7 +66,8 @@ Deno.serve(async (req: Request) => {
       case "create": {
         const email = String(body.email ?? "").trim().toLowerCase();
         const name = String(body.name ?? "").trim().slice(0, 120);
-        const role = body.role === "admin" ? "admin" : "user";
+        const role = body.role === "admin" || body.role === "both" ? "admin" : "user";
+        const canLearn = body.role !== "admin"; // učenik i "oboje" uče; samo-administrator ne
         if (!EMAIL_RE.test(email) || email.length > 254) return json({ error: "Upiši ispravnu e-mail adresu." }, 400);
         const pw = body.password;
         if (!validPassword(pw)) return json({ error: "Lozinka mora imati 8 do 72 znaka." }, 400);
@@ -75,7 +76,7 @@ Deno.serve(async (req: Request) => {
           password: pw,
           email_confirm: true,
           user_metadata: { full_name: name },
-          app_metadata: { role, created_by: callerId },
+          app_metadata: { role, can_learn: canLearn, created_by: callerId },
         });
         if (error) {
           const dup = /already|registered|exists/i.test(error.message);
@@ -91,6 +92,20 @@ Deno.serve(async (req: Request) => {
         if (!validPassword(pw)) return json({ error: "Lozinka mora imati 8 do 72 znaka." }, 400);
         const { error } = await admin.auth.admin.updateUserById(id, { password: pw });
         if (error) return json({ error: "Lozinka nije promijenjena." }, 400);
+        return json({ ok: true });
+      }
+
+      case "set_role": {
+        const id = String(body.id ?? "");
+        const r = body.role;
+        if (!id || (r !== "user" && r !== "admin" && r !== "both")) return json({ error: "Neispravna uloga." }, 400);
+        const newRole = r === "user" ? "user" : "admin";
+        const canLearn = r !== "admin";
+        if (newRole === "user" && id === callerId) return json({ error: "Ne možeš sebi ukloniti administratorsku ulogu." }, 400);
+        if (newRole === "user" && await isLastActiveAdmin(id)) return json({ error: "Ne možeš ukloniti ulogu zadnjem administratoru." }, 400);
+        const { error } = await admin.from("profiles").update({ role: newRole, can_learn: canLearn }).eq("id", id);
+        if (error) return json({ error: "Uloga nije promijenjena." }, 400);
+        await admin.auth.admin.updateUserById(id, { app_metadata: { role: newRole, can_learn: canLearn } });
         return json({ ok: true });
       }
 
