@@ -11,7 +11,7 @@ Aplikacija za pripremu teorijskog ispita za voditelja brodice (kategorije A i B)
 - Uz svako pitanje: gdje se gradivo nalazi u skripti + pomoć (hint).
 - **Pametno ponavljanje** (Leitner) — pitanja koja grešiš vraćaju se češće.
 - **Prijava e-mailom i lozinkom** (Supabase Auth), napredak i statistika odvojeni po korisniku i spremljeni u bazi, dostupni s bilo kojeg uređaja.
-- **Admin panel** (uvijek hrvatski): kreiranje korisnika (e-mail + lozinka), deaktivacija, nova lozinka, brisanje, povijest prijava (uspješne i neuspješne). Admin ne vidi tuđi napredak.
+- **Admin panel** (uvijek hrvatski): kreiranje korisnika (e-mail + lozinka), **promjena uloge** (učenik, administrator ili oboje), deaktivacija, nova lozinka, brisanje, povijest prijava (uspješne i neuspješne). Admin ne vidi tuđi napredak. Korisnik s obje uloge u aplikaciji prelazi između učenja i administracije (kartice "Admin" i "Učenje").
 
 ## Arhitektura
 

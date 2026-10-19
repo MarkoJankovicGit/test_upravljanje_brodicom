@@ -8,12 +8,24 @@ Projekt: `ouavhtfnhvfzyzzftyks` (https://ouavhtfnhvfzyzzftyks.supabase.co), regi
 
 | Tablica | Sadržaj | Tko čita | Tko piše |
 |---|---|---|---|
-| `profiles` | korisnik: e-mail, ime, uloga, aktivan, zadnja prijava, broj prijava | vlasnik, admin | samo Edge funkcija (service_role) |
+| `profiles` | korisnik: e-mail, ime, uloga (`role`), `can_learn`, aktivan, zadnja prijava, broj prijava | vlasnik, admin | samo Edge funkcija (service_role) |
 | `login_events` | povijest prijava (uspješne i neuspješne) | admin | funkcije `record_login`, `record_failed_login` |
 | `user_progress` | napredak po pitanju (kutija, viđeno, točno, krivo) | samo vlasnik | vlasnik |
 | `user_state` | postavke i dani aktivnosti | samo vlasnik | vlasnik |
 
 Admin namjerno **ne vidi** tuđi napredak.
+
+## Uloge
+
+Korisnik može biti samo učenik, samo administrator ili oboje:
+
+| Uloga u panelu | `role` | `can_learn` |
+|---|---|---|
+| Učenik | `user` | `true` |
+| Administrator | `admin` | `false` |
+| Administrator i učenik | `admin` | `true` |
+
+Mijenja se u admin panelu (gumb "Uloga" u redu korisnika) preko akcije `set_role` Edge funkcije. Zaštite: sebi se ne može ukloniti administratorska uloga, a zadnjem aktivnom administratoru se ne može ukloniti uloga. Migracija: `migrations/20261019000000_roles.sql` (primijeniti prije objave nove verzije aplikacije).
 
 ## Postavke projekta
 
@@ -22,7 +34,7 @@ Admin namjerno **ne vidi** tuđi napredak.
 
 ## Edge funkcija `admin-users`
 
-`functions/admin-users/index.ts` — postavljena u projekt (Edge Functions → Deploy via Editor). Provjera tokena na ulazu ("Verify JWT with legacy secret") je isključena jer funkcija sama provjerava prijavljenog korisnika i je li aktivni admin. Dopuštena porijekla (CORS): `https://markojankovicgit.github.io`, lokalni `5178`, te sve adrese iz tajne **`ALLOWED_ORIGINS`** (Edge Functions → Secrets; više adresa odvojiti zarezom, npr. adresa na Vercelu). Izmjena tajne ne traži novi deploy koda. Akcije: `create`, `set_password`, `set_active`, `delete`; štiti zadnjeg administratora i samog sebe.
+`functions/admin-users/index.ts` — postavljena u projekt (Edge Functions → Deploy via Editor). Provjera tokena na ulazu ("Verify JWT with legacy secret") je isključena jer funkcija sama provjerava prijavljenog korisnika i je li aktivni admin. Dopuštena porijekla (CORS): `https://markojankovicgit.github.io`, lokalni `5178`, te sve adrese iz tajne **`ALLOWED_ORIGINS`** (Edge Functions → Secrets; više adresa odvojiti zarezom, npr. adresa na Vercelu). Izmjena tajne ne traži novi deploy koda. Akcije: `create`, `set_role`, `set_password`, `set_active`, `delete`; štiti zadnjeg administratora i samog sebe.
 
 ## Provjera pravila pristupa
 
